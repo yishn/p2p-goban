@@ -1,3 +1,6 @@
-import Board from './crdt-board.js'
+import {h, render} from 'preact'
+import App from './components/App.js'
 
-console.log(new Board())
+render(h(App, {
+    ref: component => window.App = component
+}), document.getElementById('app'))

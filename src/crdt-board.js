@@ -1,7 +1,7 @@
 import uuid from 'uuid/v4'
 import {vertexEquals} from './helper.js'
 
-function timestampCompare(timestamp1, timestamp2) {
+function compareTimestamps(timestamp1, timestamp2) {
     let isSmaller = true
     let isBigger = true
     let isEquals = true
@@ -56,18 +56,24 @@ export default class Board {
         }
     }
 
-    pushOperations(operations) {
-        for (let operation of operations) {
-            if (this.operations.some(o => timestampEquals(o.timestamp, operation.timestamp))) continue
+    pushOperations(operation) {
+        if (this.operations.some(o => timestampEquals(o.timestamp, operation.timestamp))) return
 
-            this.updateTimestamp(operation.timestamp)
-            this.operations.push(operation)
+        this.updateTimestamp(operation.timestamp)
+
+        let i = this.operations.length - 1
+
+        while (i >= 0) {
+            let {sign, timestamp} = this.operations[i]
+            let comparison = compareTimestamps(timestamp, operation.timestamp)
+
+            if (comparison == null) comparison = sign - operation.sign
+            if (comparison >= 0) break
+
+            i--
         }
 
-        operations.sort((o1, o2) => {
-            let result = timestampCompare(o1.timestamp, o2.timestamp)
-            return result != null ? result : o1.sign - o2.signs
-        })
+        this.operations.splice(i + 1, 0, operation)
     }
 
     set(vertex, sign) {

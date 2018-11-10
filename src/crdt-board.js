@@ -91,9 +91,14 @@ export default class Board {
         return 0
     }
 
+    getCurrentVertex() {
+        if (this.operations.length === 0) return null
+        return this.operations.slice(-1)[0].vertex
+    }
+
     render(width, height) {
-        return [...Array(height)].map(y =>
-            [...Array(width)].map(x =>
+        return [...Array(height)].map((_, y) =>
+            [...Array(width)].map((_, x) =>
                 this.get([x, y])
             )
         )

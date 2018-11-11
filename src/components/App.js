@@ -2,17 +2,19 @@ import {h, Component} from 'preact'
 import {Goban} from '@sabaki/shudan'
 import ToolBar from './ToolBar.js'
 
-import Peer from 'simple-peer'
+import createSwarm from 'webrtc-swarm'
+import signalhub from 'signalhub'
+import uuid from 'uuid/v4'
 import Board from '../crdt-board.js'
 
 export default class App extends Component {
     constructor(props) {
         super(props)
 
-        this.peer = null
+        this.hub = null
 
         this.state = {
-            error: false,
+            swarm: null,
             busy: true,
             sign: 1,
             board: new Board()
@@ -20,43 +22,55 @@ export default class App extends Component {
     }
 
     componentDidMount() {
-        let initiator = location.hash.length <= 1
+        let channel = location.hash.length <= 1 ? uuid() : location.hash.slice(1)
+        if (location.hash.length <= 1) history.replaceState(null, '', `#${channel}`)
 
-        this.peer = new Peer({initiator, trickle: false})
+        this.hub = signalhub(channel, ['https://signalhub.mafintosh.com'])
 
-        this.peer.on('signal', signal => {
-            let code = JSON.stringify(signal)
-            prompt('Signal', code)
-        })
+        this.setState(({board}) => {
+            let swarm = createSwarm(this.hub, {uuid: board.id})
 
-        this.peer.on('connect', () => {
-            this.peer.send(JSON.parse(this.state.board.operations))
-            this.setState({busy: false})
-        })
+            swarm.on('peer', (peer, id) => {
+                console.log('connected to', id)
 
-        this.peer.on('data', data => {
-            this.setState(({board}) => {
-                for (let operation of JSON.parse(data)) {
-                    board.pushOperation(operation)
-                }
+                this.setState({busy: false})
 
-                return {board}
+                peer.send(JSON.stringify(this.state.board.operations))
+
+                peer.on('data', data => {
+                    this.setState(({board}) => {
+                        for (let operation of JSON.parse(data)) {
+                            board.pushOperation(operation)
+                        }
+
+                        return {board}
+                    })
+                })
             })
-        })
 
-        this.peer.on('error', () => {
-            this.setState({error: true})
+            swarm.on('disconnect', (_, id) => {
+                console.log(id, 'disconnected')
+
+                if (swarm.peers.length === 0) {
+                    this.setState({busy: true})
+                }
+            })
+
+            return {swarm}
         })
     }
 
     handleVertexClick(evt, vertex) {
         evt.preventDefault()
 
-        if (this.peer == null) return
+        this.setState(({swarm, board, sign}) => {
+            if (swarm == null) return
 
-        this.setState(({board, sign}) => {
             let operation = board.set(vertex, board.get(vertex) !== 0 ? 0 : sign)
-            this.peer.send(JSON.stringify([operation]))
+
+            for (let peer of swarm.peers) {
+                peer.send(JSON.stringify([operation]))
+            }
 
             return {board}
         })
@@ -74,7 +88,7 @@ export default class App extends Component {
 
         if (currentVertex != null) {
             let [x, y] = currentVertex
-            markerMap[y][x] = {type: 'point'}
+            markerMap[y][x] = {type: signMap[y][x] !== 0 ? 'point' : 'cross'}
         }
 
         return h('div', {class: 'main-view'},

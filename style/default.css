@@ -5,7 +5,20 @@
 }
 
 body {
+    padding: 3rem;
     background: #111;
     color: #eee;
     font: 100%/1.5 'Segoe UI', Ubuntu, Helvetica, Arial, sans-serif;
 }
+
+.tool-bar {
+        display: flex;
+        list-style: none;
+    }
+    .tool-bar li a {
+        display: flex;
+        padding: .5rem;
+    }
+    .tool-bar li.current a {
+        background: #333;
+    }

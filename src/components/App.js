@@ -1,5 +1,6 @@
 import {h, Component} from 'preact'
 import {Goban} from '@sabaki/shudan'
+import ToolBar from './ToolBar.js'
 import Board from '../crdt-board.js'
 
 export default class App extends Component {
@@ -21,8 +22,12 @@ export default class App extends Component {
         })
     }
 
+    handleSignChange({sign}) {
+        this.setState({sign})
+    }
+
     render() {
-        let {board} = this.state
+        let {sign, board} = this.state
         let signMap = board.render(19, 19)
         let markerMap = signMap.map(row => row.map(_ => null))
         let currentVertex = board.getCurrentVertex()
@@ -32,15 +37,19 @@ export default class App extends Component {
             markerMap[y][x] = {type: 'point'}
         }
 
-        return h(Goban, {
-            showCoordinates: true,
-            fuzzyStonePlacement: true,
-            animateStonePlacement: true,
+        return h('div', {class: 'main-view'},
+            h(Goban, {
+                showCoordinates: true,
+                fuzzyStonePlacement: true,
+                animateStonePlacement: true,
 
-            signMap,
-            markerMap,
+                signMap,
+                markerMap,
 
-            onVertexClick: this.handleVertexClick.bind(this)
-        })
+                onVertexClick: this.handleVertexClick.bind(this)
+            }),
+
+            h(ToolBar, {sign, onChange: this.handleSignChange.bind(this)})
+        )
     }
 }

@@ -15,7 +15,6 @@ export default class App extends Component {
 
         this.state = {
             swarm: null,
-            busy: true,
             sign: 1,
             board: new Board()
         }
@@ -31,9 +30,7 @@ export default class App extends Component {
             let swarm = createSwarm(this.hub, {uuid: board.id})
 
             swarm.on('peer', (peer, id) => {
-                console.log('connected to', id)
-
-                this.setState({busy: false})
+                this.setState({})
 
                 peer.send(JSON.stringify(this.state.board.operations))
 
@@ -49,11 +46,7 @@ export default class App extends Component {
             })
 
             swarm.on('disconnect', (_, id) => {
-                console.log(id, 'disconnected')
-
-                if (swarm.peers.length === 0) {
-                    this.setState({busy: true})
-                }
+                this.setState({})
             })
 
             return {swarm}
@@ -81,7 +74,7 @@ export default class App extends Component {
     }
 
     render() {
-        let {busy, sign, board} = this.state
+        let {swarm, sign, board} = this.state
         let signMap = board.render(19, 19)
         let markerMap = signMap.map(row => row.map(_ => null))
         let currentVertex = board.getCurrentVertex()
@@ -93,7 +86,7 @@ export default class App extends Component {
 
         return h('div', {class: 'main-view'},
             h(Goban, {
-                busy,
+                busy: swarm == null || swarm.peers.length === 0,
                 showCoordinates: true,
                 fuzzyStonePlacement: true,
                 animateStonePlacement: true,

@@ -2,25 +2,13 @@ import uuid from 'uuid/v4'
 import {vertexEquals} from './helper.js'
 
 function compareTimestamps(timestamp1, timestamp2) {
-    let isSmaller = true
-    let isBigger = true
-    let isEquals = true
+    if (timestampEquals(timestamp1, timestamp2)) return 0
 
     let keys = [...Object.keys(timestamp1), ...Object.keys(timestamp2)].sort()
         .filter((x, i, a) => i === 0 || a[i - 1] !== x)
 
-    for (let key in keys) {
-        let value1 = key in timestamp1 ? timestamp1[key] : 0
-        let value2 = key in timestamp2 ? timestamp2[key] : 0
-
-        if (value1 > value2) isSmaller = false
-        else if (value1 < value2) isBigger = false
-        else isEquals = false
-
-        if (!isSmaller && !isBigger) return 0
-        else if (!isEquals && !isBigger) return -1
-        else if (!isEquals && !isSmaller) return 1
-    }
+    if (keys.every(key => (timestamp1[key] || 0) <= (timestamp2[key] || 0))) return -1
+    if (keys.every(key => (timestamp1[key] || 0) >= (timestamp2[key] || 0))) return 1
 
     return null
 }
@@ -56,7 +44,7 @@ export default class Board {
         }
     }
 
-    pushOperations(operation) {
+    pushOperation(operation) {
         if (this.operations.some(o => timestampEquals(o.timestamp, operation.timestamp))) return
 
         this.updateTimestamp(operation.timestamp)
@@ -68,7 +56,7 @@ export default class Board {
             let comparison = compareTimestamps(timestamp, operation.timestamp)
 
             if (comparison == null) comparison = sign - operation.sign
-            if (comparison >= 0) break
+            if (comparison <= 0) break
 
             i--
         }
@@ -79,11 +67,15 @@ export default class Board {
     set(vertex, sign) {
         this.incrementTimestamp()
 
-        this.operations.push({
+        let operation = {
             timestamp: Object.assign({}, this.timestamp),
             vertex,
             sign
-        })
+        }
+
+        this.operations.push(operation)
+
+        return operation
     }
 
     get(vertex) {

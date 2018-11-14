@@ -121,6 +121,7 @@ export default class App extends Component {
             h('div', {class: 'main-view'},
                 h(Goban, {
                     busy: swarm == null || swarm.peers.length === 0,
+                    vertexSize: 26,
                     showCoordinates: true,
                     fuzzyStonePlacement: true,
                     animateStonePlacement: true,

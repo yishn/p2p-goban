@@ -97,8 +97,8 @@ export default class App extends Component {
 
     handleVertexClick(evt, vertex) {
         this.setState(({sign, tree, position}) => {
-            let signMap = helper.signMapFromTreePosition(tree, position)
-            if (signMap[vertex[1]][vertex[0]] !== 0) return
+            let board = helper.boardFromTreePosition(tree, position)
+            if (board.get(vertex) !== 0) return
 
             let color = sign * (evt.button === 2 ? -1 : 1) > 0 ? 'B' : 'W'
             let newPosition
@@ -133,7 +133,7 @@ export default class App extends Component {
     render() {
         let {id, peers, chat, sign, tree, position} = this.state
         let node = tree.get(position)
-        let signMap = helper.signMapFromTreePosition(tree, position)
+        let signMap = helper.boardFromTreePosition(tree, position).arrangement
         let currentVertex = parseVertex((node.data.B || node.data.W || [''])[0])
         let markerMap = signMap.map((row, j) =>
             row.map((_, i) =>

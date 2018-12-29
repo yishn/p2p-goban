@@ -5,11 +5,11 @@ export function vertexEquals([x1, y1], [x2, y2]) {
     return x1 === x2 && y1 === y2
 }
 
-export function signMapFromTreePosition(tree, position) {
+export function boardFromTreePosition(tree, position) {
     let node = tree.get(position)
-    if (node == null || node.parentId == null) return new Board(19, 19).arrangement
+    if (node == null || node.parentId == null) return new Board(19, 19)
 
-    let board = new Board(19, 19, signMapFromTreePosition(tree, node.parentId))
+    let board = boardFromTreePosition(tree, node.parentId)
     let sign, vertex
 
     if (node.data.B != null) {
@@ -21,10 +21,10 @@ export function signMapFromTreePosition(tree, position) {
     }
 
     if (sign != null && vertex != null && board.hasVertex(vertex)) {
-        return board.makeMove(sign, vertex).arrangement
+        return board.makeMove(sign, vertex)
     }
 
-    return board.arrangement
+    return board
 }
 
 export function getMatrixDict(tree) {

@@ -1,91 +1,84 @@
 import {h, Component} from 'preact'
 import {Goban} from '@sabaki/shudan'
+import GameTree from '@sabaki/crdt-gametree'
 import ToolBar from './ToolBar.js'
 import ChatBox from './ChatBox.js'
 
 import createSwarm from 'webrtc-swarm'
 import signalhub from 'signalhub'
 import uuid from 'uuid/v4'
-import Board from '../crdt-board.js'
 
 export default class App extends Component {
     constructor(props) {
         super(props)
 
+        let id = uuid()
+        let channel = location.hash.length <= 1 ? uuid() : location.hash.slice(1)
+        if (location.hash.length <= 1) history.replaceState(null, '', `#${channel}`)
+
+        let tree = new GameTree({
+            id,
+            root: {
+                id: channel,
+                data: {},
+                parentId: null,
+                children: []
+            }
+        })
+
         this.hub = null
+        this.swarm = null
 
         this.state = {
-            swarm: null,
+            id,
+            channel,
+            peers: [],
             chat: [],
             sign: 1,
-            board: new Board()
+            tree,
+            position: tree.root.id
         }
     }
 
     componentDidMount() {
-        let channel = location.hash.length <= 1 ? uuid() : location.hash.slice(1)
-        if (location.hash.length <= 1) history.replaceState(null, '', `#${channel}`)
+        this.hub = signalhub(this.state.channel, ['https://signalhub.mafintosh.com'])
+        this.swarm = createSwarm(this.hub, {uuid: this.state.id})
 
-        this.hub = signalhub(channel, ['https://signalhub.mafintosh.com'])
+        this.swarm.on('connect', (peer, id) => {
+            this.setState({peers: this.swarm.peers})
 
-        this.setState(({board}) => {
-            let swarm = createSwarm(this.hub, {uuid: board.id})
+            // Synchronize state
 
-            swarm.on('connect', (peer, id) => {
-                this.setState({})
+            peer.send(JSON.stringify([
+                ...this.state.chat.map(entry => ({
+                    type: 'chat',
+                    data: entry
+                }))
+            ]))
 
-                // Synchronize state
+            peer.on('data', data => {
+                this.setState(({chat}) => {
+                    let instructions = JSON.parse(data)
 
-                peer.send(JSON.stringify([
-                    ...this.state.board.operations.map(operation => ({
-                        type: 'board',
-                        data: operation
-                    })),
-                    ...this.state.chat.map(entry => ({
-                        type: 'chat',
-                        data: entry
-                    }))
-                ]))
-
-                peer.on('data', data => {
-                    this.setState(({chat, board}) => {
-                        let instructions = JSON.parse(data)
-
-                        for (let instruction of instructions) {
-                            if (instruction.type === 'board') {
-                                board.pushOperation(instruction.data)
-                            } else if (instruction.type === 'chat') {
-                                chat = [...chat, instruction.data]
-                            }
+                    for (let instruction of instructions) {
+                        if (instruction.type === 'board') {
+                            // board.pushOperation(instruction.data)
+                        } else if (instruction.type === 'chat') {
+                            chat = [...chat, instruction.data]
                         }
+                    }
 
-                        return {chat, board}
-                    })
+                    return {chat}
                 })
             })
+        })
 
-            swarm.on('disconnect', (_, id) => {
-                this.setState({})
-            })
-
-            return {swarm}
+        this.swarm.on('disconnect', (_, id) => {
+            this.setState({peers: this.swarm.peers})
         })
     }
 
     handleVertexClick(evt, vertex) {
-        evt.preventDefault()
-
-        this.setState(({swarm, board, sign}) => {
-            if (swarm == null) return
-
-            let operation = board.set(vertex, board.get(vertex) !== 0 ? 0 : sign)
-
-            for (let peer of swarm.peers) {
-                peer.send(JSON.stringify([{type: 'board', data: operation}]))
-            }
-
-            return {board}
-        })
     }
 
     handleSignChange({sign}) {
@@ -93,12 +86,10 @@ export default class App extends Component {
     }
 
     handleChatSubmit({value}) {
-        this.setState(({swarm, board, chat}) => {
-            if (swarm == null) return
+        this.setState(({id, peers, chat}) => {
+            let entry = {from: id, value}
 
-            let entry = {from: board.id, value}
-
-            for (let peer of swarm.peers) {
+            for (let peer of peers) {
                 peer.send(JSON.stringify([{type: 'chat', data: entry}]))
             }
 
@@ -107,27 +98,16 @@ export default class App extends Component {
     }
 
     render() {
-        let {swarm, chat, sign, board} = this.state
-        let signMap = board.render(19, 19)
-        let markerMap = signMap.map(row => row.map(_ => null))
-        let currentVertex = board.getCurrentVertex()
-
-        if (currentVertex != null) {
-            let [x, y] = currentVertex
-            markerMap[y][x] = {type: signMap[y][x] !== 0 ? 'point' : 'cross'}
-        }
+        let {id, peers, chat, sign, board} = this.state
 
         return h('div', {class: 'app-view'},
             h('div', {class: 'main-view'},
                 h(Goban, {
-                    busy: swarm == null || swarm.peers.length === 0,
+                    busy: peers.length === 0,
                     vertexSize: 26,
                     showCoordinates: true,
                     fuzzyStonePlacement: true,
                     animateStonePlacement: true,
-
-                    signMap,
-                    markerMap,
 
                     onVertexClick: this.handleVertexClick.bind(this)
                 }),
@@ -137,14 +117,12 @@ export default class App extends Component {
 
             h('div', {class: 'side-bar'},
                 h('div', {class: 'status-bar'},
-                    `Connected to ${
-                        swarm == null ? 0 : swarm.peers.length
-                    } ${
-                        swarm == null || swarm.peers.length !== 1 ? 'peers' : 'peer'
+                    `Connected to ${peers.length} ${
+                        peers.length !== 1 ? 'peers' : 'peer'
                     }`
                 ),
                 h(ChatBox, {
-                    author: board.id,
+                    author: id,
                     chat,
                     onSubmit: this.handleChatSubmit.bind(this)
                 })

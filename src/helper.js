@@ -7,7 +7,7 @@ export function vertexEquals([x1, y1], [x2, y2]) {
 
 export function signMapFromTreePosition(tree, position) {
     let node = tree.get(position)
-    if (node.parentId == null) return new Board(19, 19).arrangement
+    if (node == null || node.parentId == null) return new Board(19, 19).arrangement
 
     let board = new Board(19, 19, signMapFromTreePosition(tree, node.parentId))
     let sign, vertex

@@ -53,25 +53,29 @@ export default class App extends Component {
             // Synchronize state
 
             peer.send(JSON.stringify([
-                ...this.state.chat.map(entry => ({
+                {
+                    type: 'tree',
+                    data: this.state.tree.getHistory()
+                },
+                {
                     type: 'chat',
-                    data: entry
-                }))
+                    data: this.state.chat
+                }
             ]))
 
             peer.on('data', data => {
-                this.setState(({chat}) => {
+                this.setState(({chat, tree}) => {
                     let instructions = JSON.parse(data)
 
                     for (let instruction of instructions) {
-                        if (instruction.type === 'board') {
-                            // board.pushOperation(instruction.data)
+                        if (instruction.type === 'tree') {
+                            tree = tree.applyChanges(instruction.data)
                         } else if (instruction.type === 'chat') {
-                            chat = [...chat, instruction.data]
+                            chat = [...chat, ...instruction.data]
                         }
                     }
 
-                    return {chat}
+                    return {chat, tree}
                 })
             })
         })
@@ -79,6 +83,16 @@ export default class App extends Component {
         this.swarm.on('disconnect', (_, id) => {
             this.setState({peers: this.swarm.peers})
         })
+    }
+
+    componentDidUpdate(_, prevState) {
+        if (prevState.tree !== this.state.tree) {
+            let changes = this.state.tree.getChanges(prevState.tree)
+
+            for (let peer of this.state.peers) {
+                peer.send(JSON.stringify([{type: 'tree', data: changes}]))
+            }
+        }
     }
 
     handleVertexClick(evt, vertex) {
@@ -109,7 +123,7 @@ export default class App extends Component {
             let entry = {from: id, value}
 
             for (let peer of peers) {
-                peer.send(JSON.stringify([{type: 'chat', data: entry}]))
+                peer.send(JSON.stringify([{type: 'chat', data: [entry]}]))
             }
 
             return {chat: [...chat, entry]}
@@ -118,11 +132,14 @@ export default class App extends Component {
 
     render() {
         let {id, peers, chat, sign, tree, position} = this.state
+        let node = tree.get(position)
         let signMap = helper.signMapFromTreePosition(tree, position)
-        let currentVertex = parseVertex((tree.get(position).data.B || tree.get(position).data.W || [''])[0])
+        let currentVertex = parseVertex((node.data.B || node.data.W || [''])[0])
         let markerMap = signMap.map((row, j) =>
             row.map((_, i) =>
-                helper.vertexEquals([i, j], currentVertex) ? {type: 'point'} : null
+                helper.vertexEquals([i, j], currentVertex)
+                ? {type: 'point'}
+                : null
             )
         )
 

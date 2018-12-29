@@ -8,8 +8,8 @@
     "url": "git+https://github.com/yishn/p2p-goban.git"
   },
   "scripts": {
-    "build": "webpack --entry ./src/main.js -o ./dist/bundle.js --progress --mode production",
-    "watch": "webpack --entry ./src/main.js -o ./dist/bundle.js --progress --mode development --watch"
+    "build": "webpack --progress --mode production",
+    "watch": "webpack --progress --mode development --watch"
   },
   "keywords": [
     "goban",
@@ -27,6 +27,7 @@
   "homepage": "https://github.com/yishn/p2p-goban",
   "dependencies": {
     "@sabaki/crdt-gametree": "0.0.2-alpha",
+    "@sabaki/sgf": "^3.0.0",
     "@sabaki/shudan": "^1.3.1",
     "classnames": "^2.2.6",
     "preact": "^8.3.1",

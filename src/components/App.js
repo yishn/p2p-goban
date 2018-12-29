@@ -1,12 +1,15 @@
 import {h, Component} from 'preact'
 import {Goban} from '@sabaki/shudan'
+import {parseVertex, stringifyVertex} from '@sabaki/sgf'
 import GameTree from '@sabaki/crdt-gametree'
-import ToolBar from './ToolBar.js'
-import ChatBox from './ChatBox.js'
 
 import createSwarm from 'webrtc-swarm'
 import signalhub from 'signalhub'
 import uuid from 'uuid/v4'
+
+import * as helper from '../helper'
+import ToolBar from './ToolBar.js'
+import ChatBox from './ChatBox.js'
 
 export default class App extends Component {
     constructor(props) {
@@ -79,6 +82,22 @@ export default class App extends Component {
     }
 
     handleVertexClick(evt, vertex) {
+        this.setState(({sign, tree, position}) => {
+            let signMap = helper.signMapFromTreePosition(tree, position)
+            if (signMap[vertex[1]][vertex[0]] !== 0) return
+
+            let color = sign * (evt.button === 2 ? -1 : 1) > 0 ? 'B' : 'W'
+            let newPosition
+
+            let newTree = tree.mutate(draft => {
+                newPosition = draft.appendNode(position, {[color]: [stringifyVertex(vertex)]})
+            })
+
+            return {
+                tree: newTree,
+                position: newPosition
+            }
+        })
     }
 
     handleSignChange({sign}) {
@@ -98,18 +117,32 @@ export default class App extends Component {
     }
 
     render() {
-        let {id, peers, chat, sign, board} = this.state
+        let {id, peers, chat, sign, tree, position} = this.state
+        let signMap = helper.signMapFromTreePosition(tree, position)
+        let currentVertex = parseVertex((tree.get(position).data.B || tree.get(position).data.W || [''])[0])
+        let markerMap = signMap.map((row, j) =>
+            row.map((_, i) =>
+                helper.vertexEquals([i, j], currentVertex) ? {type: 'point'} : null
+            )
+        )
 
         return h('div', {class: 'app-view'},
             h('div', {class: 'main-view'},
                 h(Goban, {
+                    innerProps: {
+                        onContextMenu: evt => evt.preventDefault()
+                    },
+
                     busy: peers.length === 0,
                     vertexSize: 26,
                     showCoordinates: true,
                     fuzzyStonePlacement: true,
                     animateStonePlacement: true,
 
-                    onVertexClick: this.handleVertexClick.bind(this)
+                    signMap,
+                    markerMap,
+
+                    onVertexMouseUp: this.handleVertexClick.bind(this)
                 }),
 
                 h(ToolBar, {sign, onChange: this.handleSignChange.bind(this)})

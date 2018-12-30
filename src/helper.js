@@ -1,5 +1,5 @@
 import {parseVertex} from '@sabaki/sgf'
-import Board from './board'
+import Board from './board.js'
 
 export function vertexEquals([x1, y1], [x2, y2]) {
     return x1 === x2 && y1 === y2
@@ -63,4 +63,20 @@ export function getMatrixDict(tree) {
     }
 
     return inner(tree.root, matrix, dict, 0, 0)
+}
+
+export function getMatrixWidth(y, matrix) {
+    let keys = [...Array(10)]
+        .map((_, i) => i + y - 4)
+        .filter(i => i >= 0 && i < matrix.length)
+
+    let padding = Math.min(...keys.map(i => {
+        for (let j = 0; j < matrix[i].length; j++)
+            if (matrix[i][j] != null) return j
+        return 0
+    }))
+
+    let width = Math.max(...keys.map(i => matrix[i].length)) - padding
+
+    return [width, padding]
 }

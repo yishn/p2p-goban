@@ -7,9 +7,10 @@ import createSwarm from 'webrtc-swarm'
 import signalhub from 'signalhub'
 import uuid from 'uuid/v4'
 
-import * as helper from '../helper'
+import * as helper from '../helper.js'
 import ToolBar from './ToolBar.js'
 import ChatBox from './ChatBox.js'
+import GameGraph from './GameGraph.js'
 
 export default class App extends Component {
     constructor(props) {
@@ -85,18 +86,8 @@ export default class App extends Component {
         })
     }
 
-    componentDidUpdate(_, prevState) {
-        if (prevState.tree !== this.state.tree) {
-            let changes = this.state.tree.getChanges(prevState.tree)
-
-            for (let peer of this.state.peers) {
-                peer.send(JSON.stringify([{type: 'tree', data: changes}]))
-            }
-        }
-    }
-
     handleVertexClick(evt, vertex) {
-        this.setState(({sign, tree, position}) => {
+        this.setState(({peers, sign, tree, position}) => {
             let board = helper.boardFromTreePosition(tree, position)
             if (board.get(vertex) !== 0) return
 
@@ -106,6 +97,15 @@ export default class App extends Component {
             let newTree = tree.mutate(draft => {
                 newPosition = draft.appendNode(position, {[color]: [stringifyVertex(vertex)]})
             })
+
+            // Broadcast changes
+
+            for (let peer of peers) {
+                peer.send(JSON.stringify([{
+                    type: 'tree',
+                    data: newTree.getChanges()
+                }]))
+            }
 
             return {
                 tree: newTree,
@@ -171,6 +171,14 @@ export default class App extends Component {
                         peers.length !== 1 ? 'peers' : 'peer'
                     }`
                 ),
+
+                h(GameGraph, {
+                    tree,
+                    position,
+                    gridSize: 22,
+                    nodeSize: 4
+                }),
+
                 h(ChatBox, {
                     author: id,
                     chat,

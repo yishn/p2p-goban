@@ -31,14 +31,38 @@ body {
 
 .side-bar {
     display: grid;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto 1fr 1fr;
     width: 250px;
     background: #222;
 }
 
 .status-bar {
     padding: .5rem 1rem;
-    background: #181818;
+}
+
+.game-graph {
+        background: #181818;
+    }
+    .game-graph svg {
+        display: block;
+    }
+    .game-graph svg:active {
+        cursor: -webkit-grabbing;
+    }
+    .game-graph svg:not(:active) > * {
+        transition: transform .3s;
+    }
+    .game-graph svg .node {
+        stroke: #111;
+        stroke-width: 1px;
+    }
+    .game-graph svg .node.hover {
+        stroke: #777;
+        stroke-width: 2px;
+    }
+    .game-graph svg .node.current {
+        stroke: #eee;
+        stroke-width: 2px;
 }
 
 .chat-box {

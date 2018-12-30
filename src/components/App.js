@@ -40,7 +40,8 @@ export default class App extends Component {
             chat: [],
             sign: 1,
             tree,
-            position: tree.root.id
+            position: tree.root.id,
+            remotePositions: {}
         }
     }
 
@@ -61,28 +62,44 @@ export default class App extends Component {
                 {
                     type: 'chat',
                     data: this.state.chat
+                },
+                {
+                    type: 'position',
+                    data: {
+                        from: this.state.position,
+                        to: this.state.position
+                    }
                 }
             ]))
 
             peer.on('data', data => {
-                this.setState(({chat, tree}) => {
+                this.setState(({chat, tree, remotePositions}) => {
                     let instructions = JSON.parse(data)
 
                     for (let instruction of instructions) {
                         if (instruction.type === 'tree') {
                             tree = tree.applyChanges(instruction.data)
+                        } else if (instruction.type === 'position') {
+                            remotePositions[id] = instruction.data.to
                         } else if (instruction.type === 'chat') {
                             chat = [...chat, ...instruction.data]
                         }
                     }
 
-                    return {chat, tree}
+                    return {chat, tree, remotePositions}
                 })
             })
         })
 
         this.swarm.on('disconnect', (_, id) => {
-            this.setState({peers: this.swarm.peers})
+            this.setState(({remotePositions}) => {
+                delete remotePositions[id]
+
+                return {
+                    peers: this.swarm.peers,
+                    remotePositions
+                }
+            })
         })
     }
 
@@ -114,8 +131,22 @@ export default class App extends Component {
         })
     }
 
-    handleNodeClick(evt, {position}) {
-        this.setState({position})
+    handlePositionChange(newPosition) {
+        this.setState(({peers, position}) => {
+            // Broadcast changes
+
+            for (let peer of peers) {
+                peer.send(JSON.stringify([{
+                    type: 'position',
+                    data: {
+                        from: position,
+                        to: newPosition
+                    }
+                }]))
+            }
+
+            return {position: newPosition}
+        })
     }
 
     handleSignChange({sign}) {
@@ -135,7 +166,7 @@ export default class App extends Component {
     }
 
     render() {
-        let {id, peers, chat, sign, tree, position} = this.state
+        let {id, peers, chat, sign, tree, position, remotePositions} = this.state
         let node = tree.get(position)
         let signMap = helper.boardFromTreePosition(tree, position).arrangement
         let currentVertex = parseVertex((node.data.B || node.data.W || [''])[0])
@@ -179,10 +210,11 @@ export default class App extends Component {
                 h(GameGraph, {
                     tree,
                     position,
+                    colored: Object.values(remotePositions),
                     gridSize: 22,
                     nodeSize: 4,
 
-                    onNodeClick: this.handleNodeClick.bind(this)
+                    onNodeClick: (_, {position}) => this.handlePositionChange(position)
                 }),
 
                 h(ChatBox, {

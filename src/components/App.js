@@ -114,6 +114,10 @@ export default class App extends Component {
         })
     }
 
+    handleNodeClick(evt, {position}) {
+        this.setState({position})
+    }
+
     handleSignChange({sign}) {
         this.setState({sign})
     }
@@ -176,7 +180,9 @@ export default class App extends Component {
                     tree,
                     position,
                     gridSize: 22,
-                    nodeSize: 4
+                    nodeSize: 4,
+
+                    onNodeClick: this.handleNodeClick.bind(this)
                 }),
 
                 h(ChatBox, {

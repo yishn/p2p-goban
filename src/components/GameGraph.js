@@ -248,10 +248,10 @@ export default class GameGraph extends Component {
 
         if (!matrix[nearestY] || !matrix[nearestY][nearestX]) return
 
-        onNodeClick(Object.assign(evt, {
+        onNodeClick(evt, {
             tree,
             position: matrix[nearestY][nearestX]
-        }))
+        })
     }
 
     renderNodes({

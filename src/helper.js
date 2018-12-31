@@ -1,11 +1,15 @@
 import {parseVertex} from '@sabaki/sgf'
 import Board from './board.js'
 
+let boardCache = {}
+
 export function vertexEquals([x1, y1], [x2, y2]) {
     return x1 === x2 && y1 === y2
 }
 
 export function boardFromTreePosition(tree, position) {
+    if (position in boardCache) return boardCache[position]
+
     let node = tree.get(position)
     if (node == null || node.parentId == null) return new Board(19, 19)
 
@@ -21,9 +25,10 @@ export function boardFromTreePosition(tree, position) {
     }
 
     if (sign != null && vertex != null && board.hasVertex(vertex)) {
-        return board.makeMove(sign, vertex)
+        board = board.makeMove(sign, vertex)
     }
 
+    boardCache[position] = board
     return board
 }
 

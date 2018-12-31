@@ -288,8 +288,7 @@ export default class GameGraph extends Component {
 
                 let isCurrentNode = this.props.position === id
                 let opacity = 1
-                let fillRGB = isCurrentNode ? [255, 174, 61]
-                    : this.props.colored.includes(id) ? [72, 134, 213]
+                let fillRGB = this.props.colored.includes(id) ? [72, 134, 213]
                     : [238, 238, 238]
 
                 let left = x * gridSize

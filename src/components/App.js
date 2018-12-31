@@ -24,7 +24,7 @@ export default class App extends Component {
             id,
             root: {
                 id: channel,
-                data: {},
+                data: {SZ: ['19']},
                 parentId: null,
                 children: []
             }
@@ -118,10 +118,19 @@ export default class App extends Component {
             // Broadcast changes
 
             for (let peer of peers) {
-                peer.send(JSON.stringify([{
-                    type: 'tree',
-                    data: newTree.getChanges()
-                }]))
+                peer.send(JSON.stringify([
+                    {
+                        type: 'tree',
+                        data: newTree.getChanges()
+                    },
+                    {
+                        type: 'position',
+                        data: {
+                            from: position,
+                            to: newPosition
+                        }
+                    }
+                ]))
             }
 
             return {

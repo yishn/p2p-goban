@@ -183,9 +183,7 @@ export default class GameGraph extends Component {
         this.componentWillReceiveProps()
     }
 
-    componentWillReceiveProps({position, tree} = {}) {
-        if (position == null) return
-
+    componentWillReceiveProps({tree} = {}) {
         if (tree == null || tree !== this.props.tree) {
             this.setState({matrixDict: this.getMatrixDict(tree || this.props.tree)})
         }

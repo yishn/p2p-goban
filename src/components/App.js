@@ -103,6 +103,18 @@ export default class App extends Component {
         })
     }
 
+    handleWheel(evt) {
+        evt.preventDefault()
+
+        let {tree, position} = this.state
+        let step = Math.sign(evt.deltaY)
+        let node = tree.navigate(position, step, {})
+
+        if (node != null && node.id !== position) {
+            this.handlePositionChange(node.id)
+        }
+    }
+
     handleVertexClick(evt, vertex) {
         this.setState(({peers, sign, tree, position}) => {
             let board = helper.boardFromTreePosition(tree, position)
@@ -191,7 +203,8 @@ export default class App extends Component {
             h('div', {class: 'main-view'},
                 h(Goban, {
                     innerProps: {
-                        onContextMenu: evt => evt.preventDefault()
+                        onContextMenu: evt => evt.preventDefault(),
+                        onWheel: this.handleWheel.bind(this)
                     },
 
                     busy: peers.length === 0,

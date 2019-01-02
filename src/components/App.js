@@ -232,7 +232,13 @@ export default class App extends Component {
                 h(GameGraph, {
                     tree,
                     position,
-                    colored: Object.values(remotePositions),
+
+                    colors: Object.entries(Object.assign({}, remotePositions, {[id]: position}))
+                        .reduce((acc, [id, position]) => {
+                            acc[position] = helper.getIdentity(id).color
+                            return acc
+                        }, {}),
+
                     gridSize: 22,
                     nodeSize: 4,
 

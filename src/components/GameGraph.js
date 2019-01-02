@@ -1,6 +1,6 @@
 import {h, Component} from 'preact'
 import classNames from 'classnames'
-import * as helper from '../helper.js'
+import {vertexEquals, getMatrixDict, getMatrixWidth} from '../helper.js'
 
 class GameGraphNode extends Component {
     constructor() {
@@ -95,8 +95,8 @@ class GameGraphEdge extends Component {
         return length !== this.props.length
             || current !== this.props.current
             || gridSize !== this.props.gridSize
-            || !helper.vertexEquals(positionAbove, this.props.positionAbove)
-            || !helper.vertexEquals(positionBelow, this.props.positionBelow)
+            || !vertexEquals(positionAbove, this.props.positionAbove)
+            || !vertexEquals(positionBelow, this.props.positionBelow)
     }
 
     render({
@@ -195,7 +195,7 @@ export default class GameGraph extends Component {
     getMatrixDict(tree) {
         if (tree.getStructureHash() !== this.matrixDictHash) {
             this.matrixDictHash = tree.getStructureHash()
-            this.matrixDictCache = helper.getMatrixDict(tree)
+            this.matrixDictCache = getMatrixDict(tree)
         }
 
         return this.matrixDictCache
@@ -206,7 +206,7 @@ export default class GameGraph extends Component {
         let {matrixDict: [matrix, dict]} = this.state
 
         let [x, y] = dict[position]
-        let [width, padding] = helper.getMatrixWidth(y, matrix)
+        let [width, padding] = getMatrixWidth(y, matrix)
 
         let relX = width === 1 ? 0 : 1 - 2 * (x - padding) / (width - 1)
         let diff = (width - 1) * gridSize / 2
@@ -287,9 +287,7 @@ export default class GameGraph extends Component {
                 // Render node
 
                 let isCurrentNode = this.props.position === id
-                let opacity = 1
-                let fillRGB = this.props.colored.includes(id) ? [72, 134, 213]
-                    : [238, 238, 238]
+                let fillRGB = this.props.colors[id] || [238 / 2, 238 / 2, 238 / 2]
 
                 let left = x * gridSize
                 let top = y * gridSize
@@ -306,7 +304,7 @@ export default class GameGraph extends Component {
                         ? 'diamond' // Non-move node
                         : 'circle', // Normal node
                     current: isCurrentNode,
-                    fill: `rgb(${fillRGB.map(x => x * opacity).join(',')})`,
+                    fill: `rgb(${fillRGB.join(',')})`,
                     nodeSize: nodeSize + 1,
                     gridSize
                 }))
@@ -338,7 +336,7 @@ export default class GameGraph extends Component {
                             positionAbove,
                             positionBelow,
                             length: (sequence.length - 1) * gridSize,
-                            current: true,
+                            current: false,
                             gridSize
                         }))
 
@@ -358,7 +356,7 @@ export default class GameGraph extends Component {
                             positionAbove: [left, top],
                             positionBelow: [nx * gridSize, ny * gridSize],
                             length: (subsequence.length - 1) * gridSize,
-                            current: true,
+                            current: false,
                             gridSize
                         }))
 

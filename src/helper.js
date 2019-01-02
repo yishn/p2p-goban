@@ -1,5 +1,7 @@
+import {createHash} from 'crypto'
 import {parseVertex} from '@sabaki/sgf'
 import Board from './board.js'
+import identities from './identities.json'
 
 let boardCache = {}
 
@@ -84,4 +86,20 @@ export function getMatrixWidth(y, matrix) {
     let width = Math.max(...keys.map(i => matrix[i].length)) - padding
 
     return [width, padding]
+}
+
+export function getIdentity(input) {
+    let hash = [...createHash('sha1').update(input).digest().values()]
+    let getIndexFromHash = (len, hash) =>
+        (hash.reduce((sum, x, i) => (sum + (i % 2 === 0 ? 1 : -1) * x) % len) + len) % len
+    let getItemFromHash = (arr, hash) => arr[getIndexFromHash(arr.length, hash)]
+
+    let adjective = getItemFromHash(identities.adjectives, hash)
+    let noun = getItemFromHash(identities.nouns, hash)
+    let color = getItemFromHash(identities.colors, hash)
+
+    return {
+        color,
+        name: adjective[0].toUpperCase() + adjective.slice(1) + ' ' + noun
+    }
 }

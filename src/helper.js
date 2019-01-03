@@ -1,4 +1,4 @@
-import {createHash} from 'crypto'
+import rusha from 'rusha'
 import {parseVertex} from '@sabaki/sgf'
 import Board from './board.js'
 import identities from './identities.json'
@@ -89,7 +89,7 @@ export function getMatrixWidth(y, matrix) {
 }
 
 export function getIdentity(input) {
-    let hash = [...createHash('sha1').update(input).digest().values()]
+    let hash = [...new Int32Array(rusha.createHash().update(input).digest())]
     let getIndexFromHash = (len, hash) =>
         (hash.reduce((sum, x, i) => (sum + (i % 2 === 0 ? 1 : -1) * x) % len) + len) % len
     let getItemFromHash = (arr, hash) => arr[getIndexFromHash(arr.length, hash)]

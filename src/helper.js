@@ -88,7 +88,7 @@ export function getMatrixWidth(y, matrix) {
 }
 
 export function getIdentity(input) {
-    let hash = [...input].map(x => x.charCodeAt(0))
+    let hash = [...Array(input.length)].map((_, i) => input.charCodeAt(i))
     let getIndexFromHash = (m, hash) => (hash.reduce((acc, x) => (acc * 33) ^ x, 5381) >>> 0) % m
     let getItemFromHash = (arr, hash) => arr[getIndexFromHash(arr.length, hash)]
 

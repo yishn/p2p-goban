@@ -33,6 +33,17 @@ export function boardFromTreePosition(tree, position) {
     return board
 }
 
+export function nodeMerger(node, data) {
+    if (
+        node.data.B != null && data.B != null && node.data.B[0] === data.B[0]
+        || node.data.W != null && data.W != null && node.data.W[0] === data.W[0]
+    ) {
+        return node.data
+    }
+
+    return null
+}
+
 export function getMatrixDict(tree) {
     let matrix = [...Array(tree.getHeight() + 1)].map(_ => [])
     let dict = {}

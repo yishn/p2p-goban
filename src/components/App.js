@@ -22,6 +22,7 @@ export default class App extends Component {
 
         let tree = new GameTree({
             id,
+            merger: helper.nodeMerger,
             root: {
                 id: channel,
                 data: {SZ: ['19']},

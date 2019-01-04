@@ -76,16 +76,32 @@ export default class App extends Component {
             peer.on('data', data => {
                 this.setState(({chat, tree, remotePositions, position}) => {
                     let oldTree = tree
+                    let oldPosition = position
                     let instructions = JSON.parse(data)
+                    let treeChanges = []
 
                     for (let instruction of instructions) {
                         if (instruction.type === 'tree') {
                             tree = tree.applyChanges(instruction.data)
+                            treeChanges.push(...instruction.data)
                         } else if (instruction.type === 'position') {
                             remotePositions[id] = instruction.data.to
                         } else if (instruction.type === 'chat') {
                             chat = [...chat, ...instruction.data]
                         }
+                    }
+
+                    // Find position to follow if applicable
+
+                    let followPosition = (treeChanges.find(change =>
+                        change.operation === 'appendNode'
+                        && position === change.args[0]
+                        && oldTree.get(change.returnValue) == null
+                        && tree.get(change.returnValue) != null
+                    ) || {}).returnValue
+
+                    if (followPosition != null) {
+                        position = followPosition
                     }
 
                     if (tree.get(position) == null) {
@@ -99,6 +115,7 @@ export default class App extends Component {
                         }
                     }
 
+                    this.broadcastPositionChange(oldPosition, position)
                     return {chat, tree, remotePositions, position}
                 })
             })
@@ -177,20 +194,20 @@ export default class App extends Component {
         })
     }
 
+    broadcastPositionChange(from, to) {
+        if (from === to) return
+
+        for (let peer of this.state.peers) {
+            peer.send(JSON.stringify([{
+                type: 'position',
+                data: {from, to}
+            }]))
+        }
+    }
+
     handlePositionChange(newPosition) {
         this.setState(({peers, position}) => {
-            // Broadcast changes
-
-            for (let peer of peers) {
-                peer.send(JSON.stringify([{
-                    type: 'position',
-                    data: {
-                        from: position,
-                        to: newPosition
-                    }
-                }]))
-            }
-
+            this.broadcastPositionChange(position, newPosition)
             return {position: newPosition}
         })
     }

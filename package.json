@@ -31,7 +31,6 @@
     "@sabaki/shudan": "^1.3.2",
     "classnames": "^2.2.6",
     "preact": "^8.4.2",
-    "rusha": "^0.8.13",
     "signalhub": "^4.9.0",
     "uuid": "^3.3.2",
     "webrtc-swarm": "^2.9.0"

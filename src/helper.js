@@ -1,4 +1,3 @@
-import rusha from 'rusha'
 import {parseVertex} from '@sabaki/sgf'
 import Board from './board.js'
 import identities from './identities.json'
@@ -89,9 +88,8 @@ export function getMatrixWidth(y, matrix) {
 }
 
 export function getIdentity(input) {
-    let hash = [...new Int32Array(rusha.createHash().update(input).digest())]
-    let getIndexFromHash = (len, hash) =>
-        (hash.reduce((sum, x, i) => (sum + (i % 2 === 0 ? 1 : -1) * x) % len) + len) % len
+    let hash = [...input].map(x => x.charCodeAt(0))
+    let getIndexFromHash = (m, hash) => (hash.reduce((acc, x) => (acc * 33) ^ x, 5381) >>> 0) % m
     let getItemFromHash = (arr, hash) => arr[getIndexFromHash(arr.length, hash)]
 
     let adjective = getItemFromHash(identities.adjectives, hash)

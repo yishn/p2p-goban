@@ -74,7 +74,8 @@ export default class App extends Component {
             ]))
 
             peer.on('data', data => {
-                this.setState(({chat, tree, remotePositions}) => {
+                this.setState(({chat, tree, remotePositions, position}) => {
+                    let oldTree = tree
                     let instructions = JSON.parse(data)
 
                     for (let instruction of instructions) {
@@ -87,7 +88,18 @@ export default class App extends Component {
                         }
                     }
 
-                    return {chat, tree, remotePositions}
+                    if (tree.get(position) == null) {
+                        // Find a new valid position
+
+                        for (let node of oldTree.listNodesVertically(position, -1, {})) {
+                            if (tree.get(node.id) != null) {
+                                position = node.id
+                                break
+                            }
+                        }
+                    }
+
+                    return {chat, tree, remotePositions, position}
                 })
             })
         })
@@ -119,14 +131,26 @@ export default class App extends Component {
     handleVertexClick(evt, vertex) {
         this.setState(({peers, sign, tree, position}) => {
             let board = helper.boardFromTreePosition(tree, position)
-            if (board.get(vertex) !== 0) return
+            let newTree, newPosition
 
-            let color = sign * (evt.button === 2 ? -1 : 1) > 0 ? 'B' : 'W'
-            let newPosition
+            if (board.get(vertex) !== 0) {
+                let node = tree.get(position)
+                let currentVertex = parseVertex((node.data.W || node.data.B || [''])[0])
 
-            let newTree = tree.mutate(draft => {
-                newPosition = draft.appendNode(position, {[color]: [stringifyVertex(vertex)]})
-            })
+                if (!helper.vertexEquals(currentVertex, vertex)) return
+                if (!confirm('Do you really want to remove this node?')) return
+
+                newPosition = node.parentId
+                newTree = tree.mutate(draft => {
+                    draft.removeNode(position)
+                })
+            } else {
+                let color = sign * (evt.button === 2 ? -1 : 1) > 0 ? 'B' : 'W'
+
+                newTree = tree.mutate(draft => {
+                    newPosition = draft.appendNode(position, {[color]: [stringifyVertex(vertex)]})
+                })
+            }
 
             // Broadcast changes
 

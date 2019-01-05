@@ -96,7 +96,6 @@ export default class App extends Component {
                     let followPosition = (treeChanges.find(change =>
                         change.operation === 'appendNode'
                         && position === change.args[0]
-                        && oldTree.get(change.returnValue) == null
                         && tree.get(change.returnValue) != null
                     ) || {}).returnValue
 
@@ -115,7 +114,15 @@ export default class App extends Component {
                         }
                     }
 
-                    this.broadcastPositionChange(oldPosition, position)
+                    if (oldPosition !== position) {
+                        this.broadcastChanges([
+                            {
+                                type: 'position',
+                                data: {from: oldPosition, to: position}
+                            }
+                        ])
+                    }
+
                     return {chat, tree, remotePositions, position}
                 })
             })
@@ -169,23 +176,16 @@ export default class App extends Component {
                 })
             }
 
-            // Broadcast changes
-
-            for (let peer of peers) {
-                peer.send(JSON.stringify([
-                    {
-                        type: 'tree',
-                        data: newTree.getChanges()
-                    },
-                    {
-                        type: 'position',
-                        data: {
-                            from: position,
-                            to: newPosition
-                        }
-                    }
-                ]))
-            }
+            this.broadcastChanges([
+                {
+                    type: 'position',
+                    data: {from: position, to: newPosition}
+                },
+                {
+                    type: 'tree',
+                    data: newTree.getChanges()
+                }
+            ])
 
             return {
                 tree: newTree,
@@ -194,20 +194,25 @@ export default class App extends Component {
         })
     }
 
-    broadcastPositionChange(from, to) {
-        if (from === to) return
+    broadcastChanges(changes) {
+        if (changes.length === 0) return
 
         for (let peer of this.state.peers) {
-            peer.send(JSON.stringify([{
-                type: 'position',
-                data: {from, to}
-            }]))
+            peer.send(JSON.stringify(changes))
         }
     }
 
     handlePositionChange(newPosition) {
-        this.setState(({peers, position}) => {
-            this.broadcastPositionChange(position, newPosition)
+        this.setState(({position}) => {
+            if (position === newPosition) return
+
+            this.broadcastChanges([
+                {
+                    type: 'position',
+                    data: {from: position, to: newPosition}
+                }
+            ])
+
             return {position: newPosition}
         })
     }

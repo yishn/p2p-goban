@@ -246,6 +246,16 @@ export default class App extends Component {
             )
         )
 
+        let ghostStoneMap = node.children.map(child => ({
+            sign: child.data.B != null ? 1 : child.data.W != null ? -1 : 0,
+            vertex: parseVertex((child.data.B || child.data.W || [''])[0])
+        })).filter(({sign, vertex}) =>
+            sign !== 0 && !helper.vertexEquals(vertex, [-1, -1])
+        ).reduce((acc, {sign, vertex: [x, y]}) => {
+            acc[y][x] = {sign}
+            return acc
+        }, signMap.map(row => row.map(_ => null)))
+
         return h('div', {class: 'app-view'},
             h('div', {class: 'main-view'},
                 h(Goban, {
@@ -262,6 +272,7 @@ export default class App extends Component {
 
                     signMap,
                     markerMap,
+                    ghostStoneMap,
 
                     onVertexMouseUp: this.handleVertexClick.bind(this)
                 }),

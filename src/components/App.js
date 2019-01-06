@@ -7,6 +7,7 @@ import createSwarm from 'webrtc-swarm'
 import signalhub from 'signalhub'
 import uuid from 'uuid/v4'
 
+import config from '../../config.json'
 import * as helper from '../helper.js'
 import ToolBar from './ToolBar.js'
 import ChatBox from './ChatBox.js'
@@ -47,7 +48,7 @@ export default class App extends Component {
     }
 
     componentDidMount() {
-        this.hub = signalhub(this.state.channel, ['https://signalhub.mafintosh.com'])
+        this.hub = signalhub(this.state.channel, config.signalhub.urls)
         this.swarm = createSwarm(this.hub, {uuid: this.state.id})
 
         this.swarm.on('connect', (peer, id) => {

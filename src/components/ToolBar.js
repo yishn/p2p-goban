@@ -2,7 +2,7 @@ import {h, Component} from 'preact'
 import classnames from 'classnames'
 
 export default class ToolBar extends Component {
-    handleClick(evt) {
+    handleSignClick(evt) {
         evt.preventDefault()
 
         let {onChange = () => {}} = this.props
@@ -12,11 +12,11 @@ export default class ToolBar extends Component {
     }
 
     render() {
-        let {sign} = this.props
+        let {sign, onDownloadClick = () => {}} = this.props
 
         return h('ul', {class: 'tool-bar'},
             h('li', {class: classnames({current: sign === 1})},
-                h('a', {href: '#', 'data-sign': '1', onClick: this.handleClick.bind(this)},
+                h('a', {href: '#', 'data-sign': '1', onClick: this.handleSignClick.bind(this)},
                     h('img', {
                         alt: 'Black Stone',
                         src: './node_modules/@sabaki/shudan/css/stone_1.png',
@@ -26,7 +26,7 @@ export default class ToolBar extends Component {
                 )
             ),
             h('li', {class: classnames({current: sign === -1})},
-                h('a', {href: '#', 'data-sign': '-1', onClick: this.handleClick.bind(this)},
+                h('a', {href: '#', 'data-sign': '-1', onClick: this.handleSignClick.bind(this)},
                     h('img', {
                         alt: 'White Stone',
                         src: './node_modules/@sabaki/shudan/css/stone_-1.png',
@@ -34,6 +34,15 @@ export default class ToolBar extends Component {
                         height: 16
                     })
                 )
+            ),
+
+            h('li', {class: 'spacer'}),
+
+            h('li', {},
+                h('a', {
+                    href: '#',
+                    onClick: evt => (evt.preventDefault(), onDownloadClick())
+                }, 'Download SGF')
             )
         )
     }

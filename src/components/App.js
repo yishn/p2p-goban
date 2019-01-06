@@ -1,6 +1,6 @@
-import {h, Component} from 'preact'
+import {h, Component, render} from 'preact'
 import {Goban} from '@sabaki/shudan'
-import {parseVertex, stringifyVertex} from '@sabaki/sgf'
+import {stringify as stringifySGF, parseVertex, stringifyVertex} from '@sabaki/sgf'
 import GameTree from '@sabaki/crdt-gametree'
 
 import createSwarm from 'webrtc-swarm'
@@ -251,6 +251,20 @@ export default class App extends Component {
         })
     }
 
+    handleDownloadClick() {
+        let sgf = stringifySGF([this.state.tree.root])
+        let href = `data:application/x-go-sgf;charset=utf-8,${encodeURIComponent(sgf)}`
+
+        let element = render(h('a', {
+            href,
+            style: {visibility: 'hidden'},
+            download: 'p2p-goban.sgf'
+        }), document.body)
+
+        element.click()
+        element.remove()
+    }
+
     render() {
         let {id, peers, chat, sign, tree, position, remotePositions} = this.state
         let node = tree.get(position)
@@ -295,7 +309,11 @@ export default class App extends Component {
                     onVertexMouseUp: this.handleVertexClick.bind(this)
                 }),
 
-                h(ToolBar, {sign, onChange: this.handleSignChange.bind(this)})
+                h(ToolBar, {
+                    sign,
+                    onChange: this.handleSignChange.bind(this),
+                    onDownloadClick: this.handleDownloadClick.bind(this)
+                })
             ),
 
             h('div', {class: 'side-bar'},

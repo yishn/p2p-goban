@@ -22,9 +22,14 @@ body {
         display: flex;
         list-style: none;
     }
+    .tool-bar li.spacer {
+        flex-grow: 1;
+    }
     .tool-bar li a {
         display: flex;
         padding: .5rem;
+        color: #777;
+        line-height: 16px;
     }
     .tool-bar li.current a {
         background: #222;

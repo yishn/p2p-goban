@@ -26,7 +26,13 @@ export default class App extends Component {
             merger: helper.nodeMerger,
             root: {
                 id: channel,
-                data: {SZ: ['19']},
+                data: {
+                    GM: ['1'],
+                    FF: ['4'],
+                    CA: ['UTF-8'],
+                    AP: ['p2p-goban:1.0.0'],
+                    SZ: ['19']
+                },
                 parentId: null,
                 children: []
             }
@@ -139,6 +145,17 @@ export default class App extends Component {
                 }
             })
         })
+    }
+
+    componentDidUpdate(_, prevState) {
+        if (prevState.position !== this.state.position) {
+            this.setState(({position, tree}) => {
+                let node = tree.get(position)
+                let sign = node.data.B != null ? -1 : 1
+
+                return {sign}
+            })
+        }
     }
 
     handleWheel(evt) {

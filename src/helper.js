@@ -1,4 +1,4 @@
-import {parseVertex} from '@sabaki/sgf'
+import {parseVertex, parseCompressedVertices} from '@sabaki/sgf'
 import Board from './board.js'
 import identities from './identities.json'
 
@@ -12,7 +12,17 @@ export function boardFromTreePosition(tree, position) {
     if (position in boardCache) return boardCache[position]
 
     let node = tree.get(position)
-    if (node == null || node.parentId == null) return new Board(19, 19)
+    if (node == null) return new Board(19, 19)
+
+    if (node.parentId == null) {
+        let size = (node.data.SZ || ['19'])[0]
+        let width, height
+
+        if (size.includes(':')) [width, height] = size.split(':').map(x => +x)
+        else width = height = +size
+
+        return new Board(width, height)
+    }
 
     let board = boardFromTreePosition(tree, node.parentId)
     let sign, vertex
@@ -27,6 +37,17 @@ export function boardFromTreePosition(tree, position) {
 
     if (sign != null && vertex != null && board.hasVertex(vertex)) {
         board = board.makeMove(sign, vertex)
+    }
+
+    let propData = {AW: -1, AE: 0, AB: 1}
+
+    for (let prop in propData) {
+        for (let value of node.data[prop] || []) {
+            for (let vertex of parseCompressedVertices(value)) {
+                if (!board.hasVertex(vertex)) continue
+                board.set(vertex, propData[prop])
+            }
+        }
     }
 
     boardCache[position] = board

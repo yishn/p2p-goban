@@ -148,13 +148,13 @@ export default class App extends Component {
     }
 
     componentDidUpdate(_, prevState) {
-        if (prevState.position !== this.state.position) {
-            this.setState(({position, tree}) => {
-                let node = tree.get(position)
-                let sign = node.data.B != null ? -1 : 1
+        let {tree, position} = this.state
 
-                return {sign}
-            })
+        if (prevState.position !== position) {
+            let node = tree.get(position)
+            let sign = node.data.B != null ? -1 : 1
+
+            if (sign !== this.state.sign) this.setState({sign})
         }
     }
 
@@ -221,8 +221,10 @@ export default class App extends Component {
     }
 
     handlePositionChange(newPosition) {
-        this.setState(({position}) => {
+        this.setState(({tree, position}) => {
             if (position === newPosition) return
+
+            let sign = tree.get(newPosition).data.B != null ? -1 : 1
 
             this.broadcastChanges([
                 {
@@ -231,7 +233,7 @@ export default class App extends Component {
                 }
             ])
 
-            return {position: newPosition}
+            return {sign, position: newPosition}
         })
     }
 
@@ -312,8 +314,8 @@ export default class App extends Component {
 
                 h(ToolBar, {
                     sign,
-                    whiteCaptures: board.captures[1],
                     blackCaptures: board.captures[0],
+                    whiteCaptures: board.captures[1],
 
                     onChange: this.handleSignChange.bind(this),
                     onDownloadClick: this.handleDownloadClick.bind(this)

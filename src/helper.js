@@ -96,11 +96,12 @@ export function getMatrixDict(tree) {
             let child = lastSequenceNode.children[k]
             inner(child, matrix, dict, xshift + k, yshift + sequence.length)
         }
-
-        return [matrix, dict]
     }
 
-    return inner(tree.root, matrix, dict, 0, 0)
+    inner(tree.root, matrix, dict, 0, 0)
+    matrix.pop()
+
+    return [matrix, dict]
 }
 
 export function getMatrixWidth(y, matrix) {

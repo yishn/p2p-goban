@@ -119,6 +119,10 @@ export default class App extends Component {
                                 break
                             }
                         }
+
+                        if (tree.get(position) == null) {
+                            position = tree.root.id
+                        }
                     }
 
                     if (oldPosition !== position) {

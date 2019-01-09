@@ -31,8 +31,17 @@ body {
         color: #777;
         line-height: 16px;
     }
+    .tool-bar li.button a {
+        text-decoration: none;
+    }
     .tool-bar li.current a {
         background: #222;
+    }
+    .tool-bar li a strong {
+        margin-left: .5rem;
+        color: white;
+        font-variant-numeric: tabular-nums;
+        font-weight: normal;
 }
 
 .side-bar {

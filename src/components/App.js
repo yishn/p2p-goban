@@ -268,7 +268,8 @@ export default class App extends Component {
     render() {
         let {id, peers, chat, sign, tree, position, remotePositions} = this.state
         let node = tree.get(position)
-        let signMap = helper.boardFromTreePosition(tree, position).arrangement
+        let board = helper.boardFromTreePosition(tree, position)
+        let signMap = board.arrangement
         let currentVertex = parseVertex((node.data.B || node.data.W || [''])[0])
         let markerMap = signMap.map((row, j) =>
             row.map((_, i) =>
@@ -311,6 +312,9 @@ export default class App extends Component {
 
                 h(ToolBar, {
                     sign,
+                    whiteCaptures: board.captures[1],
+                    blackCaptures: board.captures[0],
+
                     onChange: this.handleSignChange.bind(this),
                     onDownloadClick: this.handleDownloadClick.bind(this)
                 })

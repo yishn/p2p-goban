@@ -9,8 +9,6 @@ export function vertexEquals([x1, y1], [x2, y2]) {
 }
 
 export function boardFromTreePosition(tree, position) {
-    if (position in boardCache) return boardCache[position]
-
     let node = tree.get(position)
     if (node == null) return new Board(19, 19)
 
@@ -24,7 +22,10 @@ export function boardFromTreePosition(tree, position) {
         return new Board(width, height)
     }
 
-    let board = boardFromTreePosition(tree, node.parentId)
+    let board = node.parentId in boardCache
+        ? boardCache[node.parentId]
+        : boardFromTreePosition(tree, node.parentId)
+
     let sign, vertex
 
     if (node.data.B != null) {
@@ -59,7 +60,7 @@ export function nodeMerger(node, data) {
         node.data.B != null && data.B != null && node.data.B[0] === data.B[0]
         || node.data.W != null && data.W != null && node.data.W[0] === data.W[0]
     ) {
-        return node.data
+        return Object.assign({}, node.data, data)
     }
 
     return null

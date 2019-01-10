@@ -12,7 +12,11 @@ export default class ToolBar extends Component {
     }
 
     render() {
-        let {sign, blackCaptures, whiteCaptures, onDownloadClick = () => {}} = this.props
+        let {
+            sign, blackCaptures, whiteCaptures,
+            onDownloadClick = () => {},
+            onLoadClick = () => {}
+        } = this.props
 
         return h('ul', {class: 'tool-bar'},
             h('li', {class: classnames('button', {current: sign === 1})},
@@ -27,6 +31,7 @@ export default class ToolBar extends Component {
                     h('strong', {}, blackCaptures)
                 )
             ),
+
             h('li', {class: classnames('button', {current: sign === -1})},
                 h('a', {href: '#', 'data-sign': '-1', onClick: this.handleSignClick.bind(this)},
                     h('img', {
@@ -41,6 +46,13 @@ export default class ToolBar extends Component {
             ),
 
             h('li', {class: 'spacer'}),
+
+            h('li', {},
+                h('a', {
+                    href: '#',
+                    onClick: evt => (evt.preventDefault(), onLoadClick())
+                }, 'Load SGF')
+            ),
 
             h('li', {},
                 h('a', {

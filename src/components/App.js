@@ -1,6 +1,6 @@
 import {h, Component, render} from 'preact'
 import {Goban} from '@sabaki/shudan'
-import {stringify as stringifySGF, parseVertex, stringifyVertex} from '@sabaki/sgf'
+import {parse as parseSGF, stringify as stringifySGF, parseVertex, stringifyVertex} from '@sabaki/sgf'
 import GameTree from '@sabaki/crdt-gametree'
 
 import createSwarm from 'webrtc-swarm'
@@ -257,18 +257,96 @@ export default class App extends Component {
         })
     }
 
+    async handleLoadClick() {
+        let files = await new Promise(resolve => {
+            let fileInput = render(h('input', {
+                type: 'file',
+                style: {visibility: 'hidden'},
+
+                onChange: evt => {
+                    resolve(evt.target.files)
+                    fileInput.remove()
+                }
+            }), document.body)
+
+            fileInput.click()
+        })
+
+        if (files.length === 0) return
+
+        let sgf = await new Promise((resolve, reject) => {
+            let reader = new FileReader()
+
+            reader.onload = evt => resolve(evt.target.result)
+            reader.onerror = evt => reject(evt.target.error)
+
+            reader.readAsText(files[0])
+        })
+
+        let rootNodes = parseSGF(sgf)
+        if (rootNodes.length === 0) return
+
+        let newRoot = rootNodes[0]
+
+        this.setState(({tree, position}) => {
+            let newTree = tree.mutate(draft => {
+                // Clean up
+
+                for (let child of draft.root.children) {
+                    draft.removeNode(child.id)
+                }
+
+                for (let prop in draft.root.data) {
+                    draft.removeProperty(draft.root.id, prop)
+                }
+
+                // Insert root node properties
+
+                for (let prop in newRoot.data) {
+                    draft.updateProperty(draft.root.id, prop, newRoot.data[prop])
+                }
+
+                // Recursively append nodes
+
+                let inner = (id, children) => {
+                    for (let child of children) {
+                        let childId = draft.appendNode(id, child.data)
+                        inner(childId, child.children)
+                    }
+                }
+
+                inner(draft.root.id, newRoot.children)
+            })
+
+            let newPosition = newTree.root.id
+
+            this.broadcastChanges([
+                {
+                    type: 'position',
+                    data: {from: position, to: newPosition}
+                },
+                {
+                    type: 'tree',
+                    data: newTree.getChanges()
+                }
+            ])
+
+            return {position: newPosition, tree: newTree}
+        })
+    }
+
     handleDownloadClick() {
         let sgf = stringifySGF([this.state.tree.root])
         let href = `data:application/x-go-sgf;charset=utf-8,${encodeURIComponent(sgf)}`
 
-        let element = render(h('a', {
+        let link = render(h('a', {
             href,
             style: {visibility: 'hidden'},
             download: 'p2p-goban.sgf'
         }), document.body)
 
-        element.click()
-        element.remove()
+        link.click()
+        link.remove()
     }
 
     render() {
@@ -322,6 +400,7 @@ export default class App extends Component {
                     whiteCaptures: board.captures[1],
 
                     onChange: this.handleSignChange.bind(this),
+                    onLoadClick: this.handleLoadClick.bind(this),
                     onDownloadClick: this.handleDownloadClick.bind(this)
                 })
             ),

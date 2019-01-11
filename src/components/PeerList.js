@@ -3,19 +3,35 @@ import classnames from 'classnames'
 import {getIdentity} from '../helper.js'
 
 class PeerListItem extends Component {
+    shouldComponentUpdate(nextProps) {
+        return nextProps.id !== this.props.id
+            || nextProps.self !== this.props.self
+    }
+
     render() {
-        let {id, self} = this.props
+        let {id, self, onClick = () => {}} = this.props
         let identity = getIdentity(id)
 
-        return h('li', {class: classnames({self})},
-            h('div', {
-                class: 'color',
-                style: {
-                    background: `rgb(${identity.color.join(',')})`
-                }
-            }), ' ',
+        return h('li', {class: classnames('peer', {self})},
+            h('a',
+                {
+                    href: '#',
+                    title: !self && `Go to ${identity.name}`,
 
-            h('span', {class: 'name'}, identity.name)
+                    onClick: evt => (evt.preventDefault(), onClick(evt))
+                },
+
+                h('span', {
+                    class: 'color',
+                    style: {
+                        background: `rgb(${identity.color.join(',')})`
+                    }
+                }), ' ',
+
+                h('span', {class: 'name'}, identity.name), ' ',
+
+                self && h('em', {}, '(You)')
+            )
         )
     }
 }

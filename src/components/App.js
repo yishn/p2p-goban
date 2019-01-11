@@ -10,6 +10,7 @@ import uuid from 'uuid/v4'
 import config from '../../config.json'
 import * as helper from '../helper.js'
 import ToolBar from './ToolBar.js'
+import PeerList from './PeerList.js'
 import ChatBox from './ChatBox.js'
 import GameGraph from './GameGraph.js'
 
@@ -44,7 +45,7 @@ export default class App extends Component {
         this.state = {
             id,
             channel,
-            peers: [],
+            peers: {},
             chat: [],
             sign: 1,
             tree,
@@ -58,7 +59,10 @@ export default class App extends Component {
         this.swarm = createSwarm(this.hub, {uuid: this.state.id})
 
         this.swarm.on('connect', (peer, id) => {
-            this.setState({peers: this.swarm.peers})
+            this.setState(({peers}) => {
+                peers[id] = peer
+                return {peers}
+            })
 
             // Synchronize state
 
@@ -140,11 +144,12 @@ export default class App extends Component {
         })
 
         this.swarm.on('disconnect', (_, id) => {
-            this.setState(({remotePositions}) => {
+            this.setState(({peers, remotePositions}) => {
+                delete peers[id]
                 delete remotePositions[id]
 
                 return {
-                    peers: this.swarm.peers,
+                    peers,
                     remotePositions
                 }
             })
@@ -175,7 +180,7 @@ export default class App extends Component {
     }
 
     handleVertexClick(evt, vertex) {
-        this.setState(({peers, sign, tree, position}) => {
+        this.setState(({sign, tree, position}) => {
             let board = helper.boardFromTreePosition(tree, position)
             let newTree, newPosition
 
@@ -219,7 +224,7 @@ export default class App extends Component {
     broadcastChanges(changes) {
         if (changes.length === 0) return
 
-        for (let peer of this.state.peers) {
+        for (let peer of Object.values(this.state.peers)) {
             peer.send(JSON.stringify(changes))
         }
     }
@@ -249,7 +254,7 @@ export default class App extends Component {
         this.setState(({id, peers, chat}) => {
             let entry = {from: id, value}
 
-            for (let peer of peers) {
+            for (let peer of Object.values(peers)) {
                 peer.send(JSON.stringify([{type: 'chat', data: [entry]}]))
             }
 
@@ -381,7 +386,7 @@ export default class App extends Component {
                         onWheel: this.handleWheel.bind(this)
                     },
 
-                    busy: peers.length === 0,
+                    busy: Object.keys(peers).length === 0,
                     vertexSize: 26,
                     showCoordinates: true,
                     fuzzyStonePlacement: true,
@@ -399,18 +404,17 @@ export default class App extends Component {
                     blackCaptures: board.captures[0],
                     whiteCaptures: board.captures[1],
 
-                    onChange: this.handleSignChange.bind(this),
-                    onLoadClick: this.handleLoadClick.bind(this),
-                    onDownloadClick: this.handleDownloadClick.bind(this)
+                    onChange: evt => this.handleSignChange(evt),
+                    onLoadClick: () => this.handleLoadClick().catch(alert),
+                    onDownloadClick: () => this.handleDownloadClick()
                 })
             ),
 
             h('div', {class: 'side-bar'},
-                h('div', {class: 'status-bar'},
-                    `Connected to ${peers.length} ${
-                        peers.length !== 1 ? 'peers' : 'peer'
-                    }`
-                ),
+                h(PeerList, {
+                    self: id,
+                    peers: Object.keys(peers)
+                }),
 
                 h(GameGraph, {
                     tree,

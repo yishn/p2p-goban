@@ -43,7 +43,11 @@ export default class PeerList extends Component {
 
         return h('div', {class: 'peer-list'},
             h('ul', {},
-                h(PeerListItem, {id: selfId, self: true, active: true}),
+                h(PeerListItem, {
+                    id: selfId,
+                    self: true,
+                    active: true
+                }),
 
                 peerIds.map(id =>
                     h(PeerListItem, {

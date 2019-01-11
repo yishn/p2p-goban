@@ -429,8 +429,9 @@ export default class App extends Component {
 
             h('div', {class: 'side-bar'},
                 h(PeerList, {
-                    self: id,
-                    peers: Object.keys(peers),
+                    selfId: id,
+                    peerIds: Object.keys(peers),
+                    activeIds: Object.keys(remotePositions).filter(id => remotePositions[id] === position),
 
                     onPeerClick: this.handlePeerClick.bind(this)
                 }),

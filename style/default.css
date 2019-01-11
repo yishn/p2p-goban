@@ -74,12 +74,17 @@ body {
         height: 1rem;
         margin: .25rem;
         border-radius: 50%;
+        border: .15rem solid #222;
+    }
+    .peer-list .peer.self .color {
+        border-color: white;
     }
     .peer-list .peer .name {
         flex-grow: 1;
         margin-left: .25rem;
+        transition: color .2s;
     }
-    .peer-list .peer.self .name {
+    .peer-list .peer.active .name {
         color: white;
     }
     .peer-list .peer em {

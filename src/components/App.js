@@ -389,7 +389,7 @@ export default class App extends Component {
             sign: child.data.B != null ? 1 : child.data.W != null ? -1 : 0,
             vertex: parseVertex((child.data.B || child.data.W || [''])[0])
         })).filter(({sign, vertex}) =>
-            sign !== 0 && !helper.vertexEquals(vertex, [-1, -1])
+            sign !== 0 && board.hasVertex(vertex)
         ).reduce((acc, {sign, vertex: [x, y]}) => {
             acc[y][x] = {sign}
             return acc

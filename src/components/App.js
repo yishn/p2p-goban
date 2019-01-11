@@ -167,6 +167,14 @@ export default class App extends Component {
         }
     }
 
+    broadcastChanges(changes) {
+        if (changes.length === 0) return
+
+        for (let peer of Object.values(this.state.peers)) {
+            peer.send(JSON.stringify(changes))
+        }
+    }
+
     handleWheel(evt) {
         evt.preventDefault()
 
@@ -221,14 +229,6 @@ export default class App extends Component {
         })
     }
 
-    broadcastChanges(changes) {
-        if (changes.length === 0) return
-
-        for (let peer of Object.values(this.state.peers)) {
-            peer.send(JSON.stringify(changes))
-        }
-    }
-
     handlePositionChange(newPosition) {
         this.setState(({tree, position}) => {
             if (position === newPosition) return
@@ -248,6 +248,23 @@ export default class App extends Component {
 
     handleSignChange({sign}) {
         this.setState({sign})
+    }
+
+    handlePeerClick({id}) {
+        this.setState(({remotePositions, tree, position}) => {
+            let newPosition = remotePositions[id]
+
+            if (newPosition != null && tree.get(newPosition) != null) {
+                this.broadcastChanges([
+                    {
+                        type: 'position',
+                        data: {from: position, to: newPosition}
+                    }
+                ])
+
+                return {position: newPosition}
+            }
+        })
     }
 
     handleChatSubmit({value}) {
@@ -413,7 +430,9 @@ export default class App extends Component {
             h('div', {class: 'side-bar'},
                 h(PeerList, {
                     self: id,
-                    peers: Object.keys(peers)
+                    peers: Object.keys(peers),
+
+                    onPeerClick: this.handlePeerClick.bind(this)
                 }),
 
                 h(GameGraph, {

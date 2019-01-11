@@ -38,14 +38,17 @@ class PeerListItem extends Component {
 
 export default class PeerList extends Component {
     render() {
-        let {self, peers} = this.props
+        let {self, peers, onPeerClick = () => {}} = this.props
 
         return h('div', {class: 'peer-list'},
             h('ul', {},
                 h(PeerListItem, {id: self, self: true}),
 
                 peers.map(id =>
-                    h(PeerListItem, {id})
+                    h(PeerListItem, {
+                        id,
+                        onClick: () => onPeerClick({id})
+                    })
                 )
             )
         )

@@ -190,7 +190,10 @@ export default class GameGraph extends Component {
 
         clearTimeout(this.updateCameraPositionId)
         this.updateCameraPositionId = setTimeout(() => this.updateCameraPosition(), 100)
-    }
+
+        clearTimeout(this.remeasureId)
+        this.remeasureId = setTimeout(() => this.remeasure(), 500)
+}
 
     getMatrixDict(tree) {
         if (tree.getStructureHash() !== this.matrixDictHash) {
@@ -222,6 +225,15 @@ export default class GameGraph extends Component {
 
     remeasure() {
         let {left, top, width, height} = this.element.getBoundingClientRect()
+
+        if (
+            this.state.viewportSize != null
+            && this.state.viewportSize[0] === width
+            && this.state.viewportSize[1] === height
+            && this.state.viewportPosition != null
+            && this.state.viewportPosition[0] === left
+            && this.state.viewportPosition[1] === top
+        ) return
 
         this.setState({
             viewportSize: [width, height],

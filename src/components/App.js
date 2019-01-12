@@ -107,8 +107,8 @@ export default class App extends Component {
                     let followPosition = (treeChanges.find(change =>
                         change.operation === 'appendNode'
                         && position === change.args[0]
-                        && tree.get(change.returnValue) != null
-                    ) || {}).returnValue
+                        && tree.get(change.ret) != null
+                    ) || {}).ret
 
                     if (followPosition != null) {
                         position = followPosition

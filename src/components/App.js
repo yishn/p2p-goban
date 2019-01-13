@@ -100,7 +100,11 @@ export default class App extends Component {
                         } else if (instruction.type === 'position') {
                             remotePositions[id] = instruction.data.to
                         } else if (instruction.type === 'highlight') {
-                            highlights[id] = instruction.data
+                            if (instruction.data != null) {
+                                highlights[id] = instruction.data
+                            } else {
+                                delete highlights[id]
+                            }
                         } else if (instruction.type === 'chat') {
                             chat = [...chat, ...instruction.data]
                         }
@@ -180,7 +184,7 @@ export default class App extends Component {
                 delete highlights[id]
                 highlightsChange = true
             }
-    }
+        }
 
         if (highlightsChange) this.setState({highlights})
     }
@@ -207,8 +211,12 @@ export default class App extends Component {
 
     handleVertexClick(evt, vertex) {
         this.setState(({id, sign, tree, position, highlights}) => {
-            if (evt.shiftKey) {
-                highlights[id] = {position, vertex}
+            if (evt.ctrlKey || evt.metaKey) {
+                let highlight = highlights[id]
+
+                highlights[id] = highlight != null && helper.vertexEquals(highlight.vertex, vertex)
+                    ? null
+                    : {position, vertex}
 
                 this.broadcastChanges([
                     {
@@ -443,7 +451,10 @@ export default class App extends Component {
                 h(PeerList, {
                     selfId: id,
                     peerIds: Object.keys(peers),
-                    activeIds: Object.keys(remotePositions).filter(id => remotePositions[id] === position),
+                    activeIds: Object.keys(remotePositions)
+                        .filter(id => remotePositions[id] === position),
+                    highlightIds: Object.keys(highlights)
+                        .filter(id => highlights[id] != null && highlights[id].position !== position),
 
                     onPeerClick: this.handlePeerClick.bind(this)
                 }),

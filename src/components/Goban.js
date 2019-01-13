@@ -53,7 +53,7 @@ export default class Goban extends Component {
                     }, signMap.map(row => row.map(_ => null))),
 
                 selectedVertices: Object.values(highlights)
-                    .filter(x => x.position === position)
+                    .filter(x => x != null && x.position === position)
                     .map(x => x.vertex),
 
                 onVertexMouseDown: () => this.gobanMouseDown = true,
@@ -64,7 +64,7 @@ export default class Goban extends Component {
 
             h('style', {},
                 Object.entries(highlights)
-                .filter(([_, x]) => x.position === position)
+                .filter(([_, x]) => x != null && x.position === position)
                 .map(([id, {vertex: [x, y]}]) => {
                     let identity = helper.getIdentity(id)
 

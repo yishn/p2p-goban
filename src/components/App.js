@@ -1,5 +1,4 @@
 import {h, Component, render} from 'preact'
-import {Goban} from '@sabaki/shudan'
 import {parse as parseSGF, stringify as stringifySGF, parseVertex, stringifyVertex} from '@sabaki/sgf'
 import GameTree from '@sabaki/crdt-gametree'
 
@@ -10,6 +9,7 @@ import copyToClipboard from 'copy-text-to-clipboard'
 
 import config from '../../config.json'
 import * as helper from '../helper.js'
+import Goban from './Goban.js'
 import ToolBar from './ToolBar.js'
 import PeerList from './PeerList.js'
 import ChatBox from './ChatBox.js'
@@ -192,9 +192,6 @@ export default class App extends Component {
     }
 
     handleVertexClick(evt, vertex) {
-        if (!this.gobanMouseDown) return
-        this.gobanMouseDown = false
-
         this.setState(({id, sign, tree, position, highlights}) => {
             if (evt.shiftKey) {
                 highlights[id] = {position, vertex}
@@ -397,49 +394,23 @@ export default class App extends Component {
     }
 
     render() {
-        let {id, peers, chat, sign, tree, position, remotePositions} = this.state
-        let node = tree.get(position)
-        let board = helper.boardFromTreePosition(tree, position)
-        let signMap = board.arrangement
-        let currentVertex = parseVertex((node.data.B || node.data.W || [''])[0])
-        let markerMap = signMap.map((row, j) =>
-            row.map((_, i) =>
-                helper.vertexEquals([i, j], currentVertex)
-                ? {type: 'point'}
-                : null
-            )
-        )
+        let {
+            id, peers, chat, sign, tree, position,
+            remotePositions, highlights
+        } = this.state
 
-        let ghostStoneMap = node.children.map(child => ({
-            sign: child.data.B != null ? 1 : child.data.W != null ? -1 : 0,
-            vertex: parseVertex((child.data.B || child.data.W || [''])[0])
-        })).filter(({sign, vertex}) =>
-            sign !== 0 && board.hasVertex(vertex)
-        ).reduce((acc, {sign, vertex: [x, y]}) => {
-            acc[y][x] = {sign}
-            return acc
-        }, signMap.map(row => row.map(_ => null)))
+        let board = helper.boardFromTreePosition(tree, position)
 
         return h('div', {class: 'app-view'},
             h('div', {class: 'main-view'},
                 h(Goban, {
-                    innerProps: {
-                        onContextMenu: evt => evt.preventDefault(),
-                        onWheel: this.handleWheel.bind(this)
-                    },
-
+                    tree,
+                    position,
+                    highlights,
                     busy: Object.keys(peers).length === 0,
-                    vertexSize: 26,
-                    showCoordinates: true,
-                    fuzzyStonePlacement: true,
-                    animateStonePlacement: true,
 
-                    signMap,
-                    markerMap,
-                    ghostStoneMap,
-
-                    onVertexMouseDown: () => this.gobanMouseDown = true,
-                    onVertexMouseUp: this.handleVertexClick.bind(this)
+                    onVertexClick: this.handleVertexClick.bind(this),
+                    onWheel: this.handleWheel.bind(this),
                 }),
 
                 h(ToolBar, {

@@ -18,6 +18,10 @@ body {
     column-gap: 1rem;
 }
 
+.shudan-vertex .shudan-selection {
+    box-shadow: 0 0.3rem 1rem rgba(0, 0, 0, .4);
+}
+
 .tool-bar {
         display: flex;
         list-style: none;

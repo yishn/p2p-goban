@@ -188,6 +188,9 @@ export default class App extends Component {
     }
 
     handleVertexClick(evt, vertex) {
+        if (!this.gobanMouseDown) return
+        this.gobanMouseDown = false
+
         this.setState(({sign, tree, position}) => {
             let board = helper.boardFromTreePosition(tree, position)
             let newTree, newPosition
@@ -413,6 +416,7 @@ export default class App extends Component {
                     markerMap,
                     ghostStoneMap,
 
+                    onVertexMouseDown: () => this.gobanMouseDown = true,
                     onVertexMouseUp: this.handleVertexClick.bind(this)
                 }),
 

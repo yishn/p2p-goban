@@ -51,7 +51,8 @@ export default class App extends Component {
             sign: 1,
             tree,
             position: tree.root.id,
-            remotePositions: {}
+            remotePositions: {},
+            highlights: {}
         }
     }
 
@@ -86,7 +87,7 @@ export default class App extends Component {
             ]))
 
             peer.on('data', data => {
-                this.setState(({chat, tree, remotePositions, position}) => {
+                this.setState(({chat, tree, position, remotePositions, highlights}) => {
                     let oldTree = tree
                     let oldPosition = position
                     let instructions = JSON.parse(data)
@@ -98,6 +99,8 @@ export default class App extends Component {
                             treeChanges.push(...instruction.data)
                         } else if (instruction.type === 'position') {
                             remotePositions[id] = instruction.data.to
+                        } else if (instruction.type === 'highlight') {
+                            highlights[id] = instruction.data
                         } else if (instruction.type === 'chat') {
                             chat = [...chat, ...instruction.data]
                         }
@@ -139,7 +142,7 @@ export default class App extends Component {
                         ])
                     }
 
-                    return {chat, tree, remotePositions, position}
+                    return {chat, tree, position, remotePositions, highlights}
                 })
             })
         })
@@ -192,43 +195,56 @@ export default class App extends Component {
         if (!this.gobanMouseDown) return
         this.gobanMouseDown = false
 
-        this.setState(({sign, tree, position}) => {
-            let board = helper.boardFromTreePosition(tree, position)
-            let newTree, newPosition
+        this.setState(({id, sign, tree, position, highlights}) => {
+            if (evt.shiftKey) {
+                highlights[id] = {position, vertex}
 
-            if (board.get(vertex) !== 0) {
-                let node = tree.get(position)
-                let currentVertex = parseVertex((node.data.W || node.data.B || [''])[0])
+                this.broadcastChanges([
+                    {
+                        type: 'highlight',
+                        data: highlights[id]
+                    }
+                ])
 
-                if (!helper.vertexEquals(currentVertex, vertex)) return
-                if (!confirm('Do you really want to remove this node?')) return
-
-                newPosition = node.parentId
-                newTree = tree.mutate(draft => {
-                    draft.removeNode(position)
-                })
+                return {highlights}
             } else {
-                let color = sign * (evt.button === 2 ? -1 : 1) > 0 ? 'B' : 'W'
+                let board = helper.boardFromTreePosition(tree, position)
+                let newTree, newPosition
 
-                newTree = tree.mutate(draft => {
-                    newPosition = draft.appendNode(position, {[color]: [stringifyVertex(vertex)]})
-                })
-            }
+                if (board.get(vertex) !== 0) {
+                    let node = tree.get(position)
+                    let currentVertex = parseVertex((node.data.W || node.data.B || [''])[0])
 
-            this.broadcastChanges([
-                {
-                    type: 'position',
-                    data: {from: position, to: newPosition}
-                },
-                {
-                    type: 'tree',
-                    data: newTree.getChanges()
+                    if (!helper.vertexEquals(currentVertex, vertex)) return
+                    if (!confirm('Do you really want to remove this node?')) return
+
+                    newPosition = node.parentId
+                    newTree = tree.mutate(draft => {
+                        draft.removeNode(position)
+                    })
+                } else {
+                    let color = sign * (evt.button === 2 ? -1 : 1) > 0 ? 'B' : 'W'
+
+                    newTree = tree.mutate(draft => {
+                        newPosition = draft.appendNode(position, {[color]: [stringifyVertex(vertex)]})
+                    })
                 }
-            ])
 
-            return {
-                tree: newTree,
-                position: newPosition
+                this.broadcastChanges([
+                    {
+                        type: 'position',
+                        data: {from: position, to: newPosition}
+                    },
+                    {
+                        type: 'tree',
+                        data: newTree.getChanges()
+                    }
+                ])
+
+                return {
+                    tree: newTree,
+                    position: newPosition
+                }
             }
         })
     }

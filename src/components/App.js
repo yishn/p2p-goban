@@ -6,6 +6,7 @@ import GameTree from '@sabaki/crdt-gametree'
 import createSwarm from 'webrtc-swarm'
 import signalhub from 'signalhub'
 import uuid from 'uuid/v4'
+import copyToClipboard from 'copy-text-to-clipboard'
 
 import config from '../../config.json'
 import * as helper from '../helper.js'
@@ -374,6 +375,11 @@ export default class App extends Component {
         link.remove()
     }
 
+    handleShareClick() {
+        copyToClipboard(window.location.toString())
+        alert('The URL has been copied into your clipboard. Share it with others to let them join you.')
+    }
+
     render() {
         let {id, peers, chat, sign, tree, position, remotePositions} = this.state
         let node = tree.get(position)
@@ -427,7 +433,8 @@ export default class App extends Component {
 
                     onChange: evt => this.handleSignChange(evt),
                     onLoadClick: () => this.handleLoadClick().catch(alert),
-                    onDownloadClick: () => this.handleDownloadClick()
+                    onDownloadClick: () => this.handleDownloadClick(),
+                    onShareClick: () => this.handleShareClick()
                 })
             ),
 

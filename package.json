@@ -30,6 +30,7 @@
     "@sabaki/sgf": "^3.1.0",
     "@sabaki/shudan": "^1.3.5",
     "classnames": "^2.2.6",
+    "copy-text-to-clipboard": "^1.0.4",
     "preact": "^8.4.2",
     "signalhub": "^4.9.0",
     "uuid": "^3.3.2",

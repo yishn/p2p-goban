@@ -15,7 +15,8 @@ export default class ToolBar extends Component {
         let {
             sign, blackCaptures, whiteCaptures,
             onDownloadClick = () => {},
-            onLoadClick = () => {}
+            onLoadClick = () => {},
+            onShareClick = () => {}
         } = this.props
 
         return h('ul', {class: 'tool-bar'},
@@ -59,6 +60,13 @@ export default class ToolBar extends Component {
                     href: '#',
                     onClick: evt => (evt.preventDefault(), onDownloadClick())
                 }, 'Download SGF')
+            ),
+
+            h('li', {},
+                h('a', {
+                    href: '#',
+                    onClick: evt => (evt.preventDefault(), onShareClick())
+                }, 'Share')
             )
         )
     }

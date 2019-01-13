@@ -7,13 +7,14 @@ class PeerListItem extends Component {
         return nextProps.id !== this.props.id
             || nextProps.self !== this.props.self
             || nextProps.active !== this.props.active
+            || nextProps.highlight !== this.props.highlight
     }
 
     render() {
-        let {id, self, active, onClick = () => {}} = this.props
+        let {id, self, active, highlight, onClick = () => {}} = this.props
         let identity = getIdentity(id)
 
-        return h('li', {class: classnames('peer', {self, active})},
+        return h('li', {class: classnames('peer', {self, active, highlight})},
             h('a',
                 {
                     href: '#',
@@ -39,7 +40,10 @@ class PeerListItem extends Component {
 
 export default class PeerList extends Component {
     render() {
-        let {selfId, peerIds, activeIds, onPeerClick = () => {}} = this.props
+        let {
+            selfId, peerIds, activeIds, highlightIds,
+            onPeerClick = () => {}
+        } = this.props
 
         return h('div', {class: 'peer-list'},
             h('ul', {},
@@ -54,6 +58,7 @@ export default class PeerList extends Component {
                         key: id,
                         id,
                         active: activeIds.includes(id),
+                        highlight: highlightIds.includes(id),
 
                         onClick: () => onPeerClick({id})
                     })

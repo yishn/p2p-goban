@@ -87,6 +87,9 @@ body {
     .peer-list .peer.self .name {
         color: white;
     }
+    .peer-list .peer.highlight .name {
+        font-style: italic;
+    }
     .peer-list .peer em {
         font-style: normal;
 }

@@ -161,7 +161,7 @@ export default class App extends Component {
     }
 
     componentDidUpdate(_, prevState) {
-        let {tree, position} = this.state
+        let {id, tree, position, remotePositions, highlights} = this.state
 
         if (prevState.position !== position) {
             let node = tree.get(position)
@@ -169,6 +169,20 @@ export default class App extends Component {
 
             if (sign !== this.state.sign) this.setState({sign})
         }
+
+        // Clean up highlights
+
+        let highlightsChange = false
+        let positions = Object.assign({}, remotePositions, {[id]: position})
+
+        for (let id in highlights) {
+            if (highlights[id] != null && positions[id] !== highlights[id].position) {
+                delete highlights[id]
+                highlightsChange = true
+            }
+    }
+
+        if (highlightsChange) this.setState({highlights})
     }
 
     broadcastChanges(changes) {

@@ -152,13 +152,15 @@ export default class App extends Component {
         })
 
         this.swarm.on('disconnect', (_, id) => {
-            this.setState(({peers, remotePositions}) => {
+            this.setState(({peers, remotePositions, highlights}) => {
                 delete peers[id]
                 delete remotePositions[id]
+                delete highlights[id]
 
                 return {
                     peers,
-                    remotePositions
+                    remotePositions,
+                    highlights
                 }
             })
         })

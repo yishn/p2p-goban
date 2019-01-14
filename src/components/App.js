@@ -80,6 +80,10 @@ export default class App extends Component {
                     data: this.state.chat
                 },
                 {
+                    type: 'highlight',
+                    data: this.state.highlights[this.state.id]
+                },
+                {
                     type: 'position',
                     data: {
                         from: this.state.position,

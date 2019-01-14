@@ -66,9 +66,11 @@ export default class App extends Component {
                 return {peers}
             })
 
+            let buffer = ''
+
             // Synchronize state
 
-            peer.send(JSON.stringify([
+            this.sendChanges(peer, [
                 {
                     type: 'tree',
                     data: this.state.tree.getHistory()
@@ -84,13 +86,23 @@ export default class App extends Component {
                         to: this.state.position
                     }
                 }
-            ]))
+            ])
 
             peer.on('data', data => {
+                if (buffer.length > 0 || data.slice(-1) !== '\n') {
+                    buffer += data.toString()
+                } else {
+                    buffer = data.toString()
+                }
+
+                if (buffer.slice(-1) !== '\n') return
+
+                let instructions = JSON.parse(buffer)
+                buffer = ''
+
                 this.setState(({chat, tree, position, remotePositions, highlights}) => {
                     let oldTree = tree
                     let oldPosition = position
-                    let instructions = JSON.parse(data)
                     let treeChanges = []
 
                     for (let instruction of instructions) {
@@ -195,8 +207,14 @@ export default class App extends Component {
         if (changes.length === 0) return
 
         for (let peer of Object.values(this.state.peers)) {
-            peer.send(JSON.stringify(changes))
+            this.sendChanges(peer, changes)
         }
+    }
+
+    sendChanges(peer, changes) {
+        if (changes.length === 0) return
+
+        peer.send(JSON.stringify(changes) + '\n')
     }
 
     handleWheel(evt) {
@@ -309,12 +327,10 @@ export default class App extends Component {
     }
 
     handleChatSubmit({value}) {
-        this.setState(({id, peers, chat}) => {
+        this.setState(({id, chat}) => {
             let entry = {from: id, value}
 
-            for (let peer of Object.values(peers)) {
-                peer.send(JSON.stringify([{type: 'chat', data: [entry]}]))
-            }
+            this.broadcastChanges([{type: 'chat', data: [entry]}])
 
             return {chat: [...chat, entry]}
         })

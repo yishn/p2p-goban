@@ -16,6 +16,38 @@ First, you connect to a server to see who's there. Then, peers share the game tr
 - Follow a peer to see what they see
 - Right-click to highlight vertices to signal peers what you're looking at
 
+## Building
+
+Building requires Node.js and npm. First, clone this repository and install all the dependencies:
+
+~~~
+$ git clone https://github.com/yishn/p2p-goban
+$ cd p2p-goban
+$ npm install
+~~~
+
+Start a [`signalhub`](https://github.com/mafintosh/signalhub) server with npx:
+
+~~~
+$ npx signalhub listen -p 51624
+~~~
+
+Open `config.example.json`, add the URL to your `signalhub` server, `http://localhost:51624` in this example, and save it under `config.json`.
+
+For development, use the following command to create a bundle automatically while you edit files:
+
+~~~
+$ npm run watch
+~~~
+
+For production, use the following command instead:
+
+~~~
+$ npm run build
+~~~
+
+Open `index.html` in a modern browser.
+
 ## Related Projects
 
 - [Shudan](https://github.com/SabakiHQ/Shudan) - A highly customizable, low-level Preact Goban component.

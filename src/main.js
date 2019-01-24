@@ -3,5 +3,5 @@ import App from './components/App.js'
 
 render(
     h(App, {ref: component => window.App = component}),
-    document.getElementById('app')
+    document.getElementById('root')
 )

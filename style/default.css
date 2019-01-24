@@ -77,9 +77,11 @@ body {
     .peer-list .peer.self > a {
         cursor: default;
     }
-    .peer-list .peer > input {
-        margin: .25rem .5rem;
-        height: 1.5rem;
+    .peer-list .peer > label {
+        display: flex;
+        align-items: center;
+        padding: .25rem .5rem;
+        height: 2rem;
     }
     .peer-list .peer .color {
         width: 1rem;

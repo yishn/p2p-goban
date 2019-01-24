@@ -40,13 +40,14 @@ class PeerListItem extends Component {
                 self && h('em', {}, '(You)')
             ),
 
-            !self && h('input', {
-                type: 'checkbox',
-                checked: follow,
-                title: `Follow ${identity.name}`,
+            !self && h('label', {title: `Follow ${identity.name}`},
+                h('input', {
+                    type: 'checkbox',
+                    checked: follow,
 
-                onClick: onFollowClick
-            })
+                    onClick: onFollowClick
+                })
+            )
         )
     }
 }

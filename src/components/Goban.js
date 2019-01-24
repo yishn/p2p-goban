@@ -30,8 +30,6 @@ export default class Goban extends Component {
                 busy,
                 vertexSize: 26,
                 showCoordinates: true,
-                fuzzyStonePlacement: true,
-                animateStonePlacement: true,
 
                 signMap,
 

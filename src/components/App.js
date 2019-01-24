@@ -77,10 +77,6 @@ export default class App extends Component {
                     data: this.state.tree.getHistory()
                 },
                 {
-                    type: 'chat',
-                    data: this.state.chat
-                },
-                {
                     type: 'highlight',
                     data: this.state.highlights[this.state.id]
                 },

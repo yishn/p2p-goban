@@ -149,38 +149,43 @@ export default class App extends Component {
         if (highlightsChange) this.setState({highlights})
     }
 
-    handleInstructions(id, instructions) {
-        this.setState(({chat, tree, position, followPeer, remotePositions, highlights}) => {
+    handleInstructions(peerId, instructions) {
+        this.setState(({id, chat, tree, position, followPeer, remotePositions, highlights}) => {
             let oldTree = tree
             let oldPosition = position
             let treeChanges = []
+            let followPosition = null
 
             for (let instruction of instructions) {
                 if (instruction.type === 'tree') {
                     tree = tree.applyChanges(instruction.data)
                     treeChanges.push(...instruction.data)
                 } else if (instruction.type === 'position') {
-                    remotePositions[id] = instruction.data.to
+                    remotePositions[peerId] = instruction.data.to
+
+                    if (followPeer === peerId && instruction.data.following !== id) {
+                        followPosition = instruction.data.to
+                    }
                 } else if (instruction.type === 'highlight') {
                     if (instruction.data != null) {
-                        highlights[id] = instruction.data
+                        highlights[peerId] = instruction.data
                     } else {
-                        delete highlights[id]
+                        delete highlights[peerId]
                     }
                 } else if (instruction.type === 'chat') {
                     chat = [...chat, ...instruction.data]
                 }
             }
 
-            // Find position to follow if applicable
+            if (followPosition == null) {
+                // Find position to follow if applicable
 
-            let followPosition = followPeer === id
-                ? remotePositions[id]
-                : (treeChanges.find(change =>
+                followPosition = (treeChanges.find(change =>
                     change.operation === 'appendNode'
                     && position === change.args[0]
                     && tree.get(change.ret) != null
                 ) || {}).ret
+            }
 
             if (followPosition != null) {
                 position = followPosition
@@ -205,7 +210,11 @@ export default class App extends Component {
                 this.broadcastInstructions([
                     {
                         type: 'position',
-                        data: {from: oldPosition, to: position}
+                        data: {
+                            from: oldPosition,
+                            to: position,
+                            following: followPosition != null ? followPeer : null
+                        }
                     }
                 ])
             }

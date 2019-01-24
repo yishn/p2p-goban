@@ -1,10 +1,40 @@
 import {h, Component} from 'preact'
-import {Goban as Shudan} from '@sabaki/shudan'
+import {BoundedGoban as Shudan} from '@sabaki/shudan'
 import {parseVertex} from '@sabaki/sgf'
 
 import * as helper from '../helper.js'
 
 export default class Goban extends Component {
+    constructor(props) {
+        super(props)
+
+        this.state = {
+            maxWidth: 0,
+            maxHeight: 0
+        }
+    }
+
+    componentDidMount() {
+        this.remeasure()
+
+        window.addEventListener('resize', () => {
+            clearTimeout(this.remeasureId)
+            this.remeasureId = setTimeout(() => this.remeasure(), 500)
+        })
+    }
+
+    remeasure() {
+        this.shudanElement.style.position = 'absolute'
+
+        let size = this.element.offsetHeight
+        this.shudanElement.style.position = 'relative'
+
+        this.setState({
+            maxWidth: size,
+            maxHeight: size
+        })
+    }
+
     handleVertexMouseUp(evt, vertex) {
         if (!this.gobanMouseDown) return
 
@@ -20,15 +50,22 @@ export default class Goban extends Component {
         let signMap = board.arrangement
         let currentVertex = parseVertex((node.data.B || node.data.W || [''])[0])
 
-        return h('div', {class: 'goban-component'},
+        return h('div',
+            {
+                ref: el => this.element = el,
+                class: 'goban-component'
+            },
+
             h(Shudan, {
                 innerProps: {
+                    ref: el => this.shudanElement = el,
                     onContextMenu: evt => evt.preventDefault(),
                     onWheel: this.props.onWheel
                 },
 
                 busy,
-                vertexSize: 26,
+                maxWidth: this.state.maxWidth,
+                maxHeight: this.state.maxHeight,
                 showCoordinates: true,
 
                 signMap,

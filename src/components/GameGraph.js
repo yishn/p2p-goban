@@ -223,8 +223,11 @@ export default class GameGraph extends Component {
         })
     }
 
-    remeasure() {
+    async remeasure() {
+        this.svgElement.style.position = 'absolute'
+
         let {left, top, width, height} = this.element.getBoundingClientRect()
+        this.svgElement.style.position = 'relative'
 
         if (
             this.state.viewportSize != null
@@ -269,11 +272,14 @@ export default class GameGraph extends Component {
         gridSize,
         nodeSize
     }, {
-        matrixDict: [matrix, dict],
+        matrixDict,
         cameraPosition: [cx, cy],
         viewportSize: [width, height],
         viewportPosition: [vx, vy]
     }) {
+        if (matrixDict == null) return
+
+        let [matrix, dict] = matrixDict
         let nodeColumns = []
         let edges = []
 
@@ -384,7 +390,6 @@ export default class GameGraph extends Component {
     }
 
     render(_, {
-        matrixDict,
         viewportSize,
         cameraPosition: [cx, cy]
     }) {
@@ -396,7 +401,7 @@ export default class GameGraph extends Component {
                 onWheel: this.props.onWheel
             },
 
-            matrixDict && viewportSize && h('svg',
+            h('svg',
                 {
                     ref: el => this.svgElement = el,
                     width: viewportSize[0],

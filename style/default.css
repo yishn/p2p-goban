@@ -4,18 +4,36 @@
     box-sizing: border-box;
 }
 
+html, body {
+    height: 100%;
+}
+
 body {
-    padding: 3rem;
     background: #111;
     color: #eee;
     font: 90%/1.5 'Segoe UI', Ubuntu, Helvetica, Arial, sans-serif;
 }
 
+#root {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 0;
+    padding: 2rem;
+}
+
 .app-view {
     display: inline-grid;
     grid-template-columns: 1fr auto;
-    grid-template-rows: 591px;
+    grid-template-rows: 100%;
     column-gap: 1rem;
+    height: 100%;
+}
+
+.main-view {
+    display: grid;
+    grid-template-rows: 1fr auto;
 }
 
 .shudan-vertex .shudan-selection {
@@ -109,9 +127,12 @@ body {
 }
 
 .game-graph {
+        position: relative;
         background: #181818;
     }
     .game-graph svg {
+        left: 0;
+        top: 0;
         display: block;
     }
     .game-graph svg:active {

@@ -52,6 +52,7 @@ export default class App extends Component {
             tree,
             position: tree.root.id,
             remotePositions: {},
+            followPeer: null,
             highlights: {}
         }
     }
@@ -70,7 +71,7 @@ export default class App extends Component {
 
             // Synchronize state
 
-            this.sendChanges(peer, [
+            this.sendInstructions(peer, [
                 {
                     type: 'tree',
                     data: this.state.tree.getHistory()
@@ -104,66 +105,7 @@ export default class App extends Component {
                 let instructions = JSON.parse(buffer)
                 buffer = ''
 
-                this.setState(({chat, tree, position, remotePositions, highlights}) => {
-                    let oldTree = tree
-                    let oldPosition = position
-                    let treeChanges = []
-
-                    for (let instruction of instructions) {
-                        if (instruction.type === 'tree') {
-                            tree = tree.applyChanges(instruction.data)
-                            treeChanges.push(...instruction.data)
-                        } else if (instruction.type === 'position') {
-                            remotePositions[id] = instruction.data.to
-                        } else if (instruction.type === 'highlight') {
-                            if (instruction.data != null) {
-                                highlights[id] = instruction.data
-                            } else {
-                                delete highlights[id]
-                            }
-                        } else if (instruction.type === 'chat') {
-                            chat = [...chat, ...instruction.data]
-                        }
-                    }
-
-                    // Find position to follow if applicable
-
-                    let followPosition = (treeChanges.find(change =>
-                        change.operation === 'appendNode'
-                        && position === change.args[0]
-                        && tree.get(change.ret) != null
-                    ) || {}).ret
-
-                    if (followPosition != null) {
-                        position = followPosition
-                    }
-
-                    if (tree.get(position) == null) {
-                        // Find a new valid position
-
-                        for (let node of oldTree.listNodesVertically(position, -1, {})) {
-                            if (tree.get(node.id) != null) {
-                                position = node.id
-                                break
-                            }
-                        }
-
-                        if (tree.get(position) == null) {
-                            position = tree.root.id
-                        }
-                    }
-
-                    if (oldPosition !== position) {
-                        this.broadcastChanges([
-                            {
-                                type: 'position',
-                                data: {from: oldPosition, to: position}
-                            }
-                        ])
-                    }
-
-                    return {chat, tree, position, remotePositions, highlights}
-                })
+                this.handleInstructions(id, instructions)
             })
         })
 
@@ -207,18 +149,83 @@ export default class App extends Component {
         if (highlightsChange) this.setState({highlights})
     }
 
-    broadcastChanges(changes) {
-        if (changes.length === 0) return
+    handleInstructions(id, instructions) {
+        this.setState(({chat, tree, position, followPeer, remotePositions, highlights}) => {
+            let oldTree = tree
+            let oldPosition = position
+            let treeChanges = []
+
+            for (let instruction of instructions) {
+                if (instruction.type === 'tree') {
+                    tree = tree.applyChanges(instruction.data)
+                    treeChanges.push(...instruction.data)
+                } else if (instruction.type === 'position') {
+                    remotePositions[id] = instruction.data.to
+                } else if (instruction.type === 'highlight') {
+                    if (instruction.data != null) {
+                        highlights[id] = instruction.data
+                    } else {
+                        delete highlights[id]
+                    }
+                } else if (instruction.type === 'chat') {
+                    chat = [...chat, ...instruction.data]
+                }
+            }
+
+            // Find position to follow if applicable
+
+            let followPosition = followPeer === id
+                ? remotePositions[id]
+                : (treeChanges.find(change =>
+                    change.operation === 'appendNode'
+                    && position === change.args[0]
+                    && tree.get(change.ret) != null
+                ) || {}).ret
+
+            if (followPosition != null) {
+                position = followPosition
+            }
+
+            if (tree.get(position) == null) {
+                // Find a new valid position
+
+                for (let node of oldTree.listNodesVertically(position, -1, {})) {
+                    if (tree.get(node.id) != null) {
+                        position = node.id
+                        break
+                    }
+                }
+
+                if (tree.get(position) == null) {
+                    position = tree.root.id
+                }
+            }
+
+            if (oldPosition !== position) {
+                this.broadcastInstructions([
+                    {
+                        type: 'position',
+                        data: {from: oldPosition, to: position}
+                    }
+                ])
+            }
+
+            return {chat, tree, position, remotePositions, highlights}
+        })
+    }
+
+    broadcastInstructions(instructions) {
+        if (instructions.length === 0) return
 
         for (let peer of Object.values(this.state.peers)) {
-            this.sendChanges(peer, changes)
+            this.sendInstructions(peer, instructions)
         }
     }
 
-    sendChanges(peer, changes) {
-        if (changes.length === 0) return
+    sendInstructions(peer, instructions) {
+        if (instructions.length === 0) return
 
-        peer.send(JSON.stringify(changes) + '\n')
+        peer.send(JSON.stringify(instructions) + '\n')
     }
 
     handleWheel(evt) {
@@ -242,7 +249,7 @@ export default class App extends Component {
                     ? null
                     : {position, vertex}
 
-                this.broadcastChanges([
+                this.broadcastInstructions([
                     {
                         type: 'highlight',
                         data: highlights[id]
@@ -273,7 +280,7 @@ export default class App extends Component {
                     })
                 }
 
-                this.broadcastChanges([
+                this.broadcastInstructions([
                     {
                         type: 'position',
                         data: {from: position, to: newPosition}
@@ -298,7 +305,7 @@ export default class App extends Component {
 
             let sign = tree.get(newPosition).data.B != null ? -1 : 1
 
-            this.broadcastChanges([
+            this.broadcastInstructions([
                 {
                     type: 'position',
                     data: {from: position, to: newPosition}
@@ -318,7 +325,7 @@ export default class App extends Component {
             let newPosition = remotePositions[id]
 
             if (newPosition != null && tree.get(newPosition) != null) {
-                this.broadcastChanges([
+                this.broadcastInstructions([
                     {
                         type: 'position',
                         data: {from: position, to: newPosition}
@@ -330,11 +337,31 @@ export default class App extends Component {
         })
     }
 
+    handleFollowClick({id}) {
+        this.setState(({position, followPeer, remotePositions}) => {
+            if (followPeer === id) {
+                return {followPeer: null}
+            }
+
+            this.broadcastInstructions([
+                {
+                    type: 'position',
+                    data: {from: position, to: remotePositions[id]}
+                }
+            ])
+
+            return {
+                followPeer: id,
+                position: remotePositions[id]
+            }
+        })
+    }
+
     handleChatSubmit({value}) {
         this.setState(({id, chat}) => {
             let entry = {from: id, value}
 
-            this.broadcastChanges([{type: 'chat', data: [entry]}])
+            this.broadcastInstructions([{type: 'chat', data: [entry]}])
 
             return {chat: [...chat, entry]}
         })
@@ -403,7 +430,7 @@ export default class App extends Component {
 
             let newPosition = newTree.root.id
 
-            this.broadcastChanges([
+            this.broadcastInstructions([
                 {
                     type: 'position',
                     data: {from: position, to: newPosition}
@@ -440,7 +467,7 @@ export default class App extends Component {
     render() {
         let {
             id, peers, chat, sign, tree, position,
-            remotePositions, highlights
+            followPeer, remotePositions, highlights
         } = this.state
 
         let board = helper.boardFromTreePosition(tree, position)
@@ -477,8 +504,10 @@ export default class App extends Component {
                         .filter(id => remotePositions[id] === position),
                     highlightIds: Object.keys(highlights)
                         .filter(id => highlights[id] != null && highlights[id].position !== position),
+                    followId: followPeer,
 
-                    onPeerClick: this.handlePeerClick.bind(this)
+                    onPeerClick: this.handlePeerClick.bind(this),
+                    onFollowClick: this.handleFollowClick.bind(this)
                 }),
 
                 h(GameGraph, {

@@ -391,7 +391,9 @@ export default class GameGraph extends Component {
         return h('section',
             {
                 ref: el => this.element = el,
-                class: 'game-graph'
+                class: 'game-graph',
+
+                onWheel: this.props.onWheel
             },
 
             matrixDict && viewportSize && h('svg',

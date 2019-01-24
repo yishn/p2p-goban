@@ -490,7 +490,7 @@ export default class App extends Component {
                     busy: Object.keys(peers).length === 0,
 
                     onVertexClick: this.handleVertexClick.bind(this),
-                    onWheel: this.handleWheel.bind(this),
+                    onWheel: this.handleWheel.bind(this)
                 }),
 
                 h(ToolBar, {
@@ -532,6 +532,7 @@ export default class App extends Component {
                     gridSize: 22,
                     nodeSize: 4,
 
+                    onWheel: this.handleWheel.bind(this),
                     onNodeClick: (_, {position}) => this.handlePositionChange(position)
                 }),
 

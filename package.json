@@ -1,7 +1,7 @@
 {
   "name": "p2p-goban",
   "version": "1.0.0",
-  "description": "A simple Goban that you can share with other people.",
+  "description": "Connect to multiple peers and play/analyze on a shared Goban.",
   "main": "main.js",
   "repository": {
     "type": "git",
@@ -37,7 +37,7 @@
     "webrtc-swarm": "^2.9.0"
   },
   "devDependencies": {
-    "webpack": "^4.28.4",
+    "webpack": "^4.29.0",
     "webpack-cli": "^3.2.1"
   }
 }

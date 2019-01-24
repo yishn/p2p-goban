@@ -1,2 +1,3 @@
 # p2p-goban
-WIP
+
+Connect to multiple peers and play/analyze on a shared Goban.

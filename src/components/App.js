@@ -242,7 +242,7 @@ export default class App extends Component {
 
     handleVertexClick(evt, vertex) {
         this.setState(({id, sign, tree, position, highlights}) => {
-            if (evt.ctrlKey || evt.metaKey) {
+            if (evt.button === 2) {
                 let highlight = highlights[id]
 
                 highlights[id] = highlight != null && helper.vertexEquals(highlight.vertex, vertex)
@@ -257,7 +257,7 @@ export default class App extends Component {
                 ])
 
                 return {highlights}
-            } else {
+            } else if (evt.button === 0) {
                 let board = helper.boardFromTreePosition(tree, position)
                 let newTree, newPosition
 
@@ -273,7 +273,7 @@ export default class App extends Component {
                         draft.removeNode(position)
                     })
                 } else {
-                    let color = sign * (evt.button === 2 ? -1 : 1) > 0 ? 'B' : 'W'
+                    let color = sign > 0 ? 'B' : 'W'
 
                     newTree = tree.mutate(draft => {
                         newPosition = draft.appendNode(position, {[color]: [stringifyVertex(vertex)]})

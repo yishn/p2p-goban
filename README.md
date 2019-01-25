@@ -1,6 +1,6 @@
 # p2p-goban
 
-Connect to multiple peers and play/analyze on a shared Goban. This is a proof of concept and I hope that all functionalities will eventually be integrated into [Sabaki](https://github.com/SabakiHQ/Sabaki).
+Connect to multiple peers and play/analyze on a shared Goban. This is a proof of concept and I hope that all functionalities will eventually be integrated into [Sabaki](https://github.com/SabakiHQ/Sabaki). [Try it out here](https://p2p-goban.yichuanshen.de/).
 
 <img src="./screenshot.png" alt="Screenshot" width="700">
 

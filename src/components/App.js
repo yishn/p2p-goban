@@ -151,6 +151,7 @@ export default class App extends Component {
             let oldPosition = position
             let treeChanges = []
             let followPosition = null
+            let following = null
 
             for (let instruction of instructions) {
                 if (instruction.type === 'tree') {
@@ -159,8 +160,15 @@ export default class App extends Component {
                 } else if (instruction.type === 'position') {
                     remotePositions[peerId] = instruction.data.to
 
-                    if (followPeer === peerId && instruction.data.following !== id) {
+                    if (
+                        followPeer === peerId
+                        && (
+                            instruction.data.following == null
+                            || !instruction.data.following.includes(id)
+                        )
+                    ) {
                         followPosition = instruction.data.to
+                        following = [...(instruction.data.following || []), peerId]
                     }
                 } else if (instruction.type === 'highlight') {
                     if (instruction.data != null) {
@@ -176,11 +184,14 @@ export default class App extends Component {
             if (followPosition == null) {
                 // Find position to follow if applicable
 
-                followPosition = (treeChanges.find(change =>
+                let change = treeChanges.find(change =>
                     change.operation === 'appendNode'
                     && position === change.args[0]
                     && tree.get(change.ret) != null
-                ) || {}).ret
+                ) || {}
+
+                followPosition = change.ret
+                following = [change.author]
             }
 
             if (followPosition != null) {
@@ -209,7 +220,7 @@ export default class App extends Component {
                         data: {
                             from: oldPosition,
                             to: position,
-                            following: followPosition != null ? followPeer : null
+                            following: followPosition != null ? following : null
                         }
                     }
                 ])

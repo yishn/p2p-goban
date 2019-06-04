@@ -121,17 +121,43 @@ export function getMatrixWidth(y, matrix) {
     return [width, padding]
 }
 
+export function capitalize(str) {
+    return str[0].toUpperCase() + str.slice(1)
+}
+
+export function getRgbFromHsv(h, s, v) {
+    let i = Math.floor(h * 6)
+    let f = h * 6 - i
+    let p = v * (1 - s)
+    let q = v * (1 - f * s)
+    let t = v * (1 - (1 - f) * s)
+    let rgb = [
+        [v, t, p],
+        [q, v, p],
+        [p, v, t],
+        [p, q, v],
+        [t, p, v],
+        [v, p, q]
+    ][i % 6]
+
+    return rgb.map(x => Math.round(x * 255))
+}
+
 export function getIdentity(input) {
     let hash = [...Array(input.length)].map((_, i) => input.charCodeAt(i))
+    let mod1 = x => x - Math.floor(x)
     let getIndexFromHash = (m, hash) => (hash.reduce((acc, x) => (acc * 33) ^ x, 5381) >>> 0) % m
     let getItemFromHash = (arr, hash) => arr[getIndexFromHash(arr.length, hash)]
+    let getHsvFromHash = hash => [
+        mod1(79 / 997 * getIndexFromHash(997, hash)),
+        (getIndexFromHash(4, hash) + 1) / 4, 1
+    ]
 
     let adjective = getItemFromHash(identities.adjectives, hash)
     let noun = getItemFromHash(identities.nouns, hash)
-    let color = getItemFromHash(identities.colors, hash)
 
     return {
-        color,
-        name: adjective[0].toUpperCase() + adjective.slice(1) + ' ' + noun
+        color: getRgbFromHsv(...getHsvFromHash(hash)),
+        name: capitalize(adjective) + ' ' + capitalize(noun)
     }
 }

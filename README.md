@@ -51,5 +51,6 @@ Open `index.html` in a modern browser.
 ## Related Projects
 
 - [Shudan](https://github.com/SabakiHQ/Shudan) - A highly customizable, low-level Preact Goban component.
+- [go-board](https://github.com/SabakiHQ/go-board) - A Go board data type.
 - [crdt-gametree](https://github.com/SabakiHQ/crdt-gametree) - A conflict-free replicated game tree data type.
 - [sgf](https://github.com/SabakiHQ/sgf) - A library for parsing and creating SGF files.

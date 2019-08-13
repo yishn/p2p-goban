@@ -47,7 +47,7 @@ export default class Goban extends Component {
 
         let node = tree.get(position)
         let board = helper.boardFromTreePosition(tree, position)
-        let signMap = board.arrangement
+        let signMap = board.signMap
         let currentVertex = parseVertex((node.data.B || node.data.W || [''])[0])
 
         return h('div',
@@ -81,7 +81,7 @@ export default class Goban extends Component {
                         sign: child.data.B != null ? 1 : child.data.W != null ? -1 : 0,
                         vertex: parseVertex((child.data.B || child.data.W || [''])[0])
                     }))
-                    .filter(({sign, vertex}) => sign !== 0 && board.hasVertex(vertex))
+                    .filter(({sign, vertex}) => sign !== 0 && board.has(vertex))
                     .reduce((acc, {sign, vertex: [x, y]}) => {
                         acc[y][x] = {sign}
                         return acc

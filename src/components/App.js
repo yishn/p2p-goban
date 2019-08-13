@@ -27,16 +27,13 @@ export default class App extends Component {
             id,
             merger: helper.nodeMerger,
             root: {
-                id: channel,
                 data: {
                     GM: ['1'],
                     FF: ['4'],
                     CA: ['UTF-8'],
                     AP: ['p2p-goban:1.0.0'],
                     SZ: ['19']
-                },
-                parentId: null,
-                children: []
+                }
             }
         })
 
@@ -502,8 +499,8 @@ export default class App extends Component {
 
                 h(ToolBar, {
                     sign,
-                    blackCaptures: board.captures[0],
-                    whiteCaptures: board.captures[1],
+                    blackCaptures: board.getCaptures(1),
+                    whiteCaptures: board.getCaptures(-1),
 
                     onChange: evt => this.handleSignChange(evt),
                     onLoadClick: () => this.handleLoadClick().catch(alert),

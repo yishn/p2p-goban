@@ -1,5 +1,5 @@
 import {parseVertex, parseCompressedVertices} from '@sabaki/sgf'
-import Board from './board.js'
+import Board from '@sabaki/go-board'
 import identities from './identities.json'
 
 let boardCache = {}
@@ -10,7 +10,7 @@ export function vertexEquals([x1, y1], [x2, y2]) {
 
 export function boardFromTreePosition(tree, position) {
     let node = tree.get(position)
-    if (node == null) return new Board(19, 19)
+    if (node == null) return Board.fromDimensions(19, 19)
 
     if (node.parentId == null) {
         let size = (node.data.SZ || ['19'])[0]
@@ -19,7 +19,7 @@ export function boardFromTreePosition(tree, position) {
         if (size.includes(':')) [width, height] = size.split(':').map(x => +x)
         else width = height = +size
 
-        return new Board(width, height)
+        return Board.fromDimensions(width, height)
     }
 
     let board = node.parentId in boardCache
@@ -36,7 +36,7 @@ export function boardFromTreePosition(tree, position) {
         sign = -1
     }
 
-    if (sign != null && vertex != null && board.hasVertex(vertex)) {
+    if (sign != null && vertex != null && board.has(vertex)) {
         board = board.makeMove(sign, vertex)
     }
 
@@ -45,7 +45,7 @@ export function boardFromTreePosition(tree, position) {
     for (let prop in propData) {
         for (let value of node.data[prop] || []) {
             for (let vertex of parseCompressedVertices(value)) {
-                if (!board.hasVertex(vertex)) continue
+                if (!board.has(vertex)) continue
                 board.set(vertex, propData[prop])
             }
         }
